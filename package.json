@@ -2,13 +2,12 @@
   "name": "escuela-api",
   "version": "1.0.0",
   "description": "A simple Express server to send emails.",
-  "main": "src/app.ts",
+  "main": "dist/app.js",
   "scripts": {
-    "start": "ts-node src/app.ts",
+    "start": "node dist/app.js",
     "build": "tsc",
     "dev": "ts-node-dev src/app.ts",
-    "postinstall": "npm run build",
-    "startprod": "node dist/app.js"
+    "postinstall": "npm run build"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.4",
