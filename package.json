@@ -6,7 +6,9 @@
   "scripts": {
     "start": "ts-node src/app.ts",
     "build": "tsc",
-    "dev": "ts-node-dev src/app.ts"
+    "dev": "ts-node-dev src/app.ts",
+    "postinstall": "npm run build",
+    "startprod": "node dist/app.js"
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.4",
