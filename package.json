@@ -21,9 +21,9 @@
     "@types/express": "^5.0.0",
     "eslint": "^9.21.0",
     "prettier": "^3.5.1",
-    "ts-node": "^10.4.0",
-    "ts-node-dev": "^1.1.8",
-    "typescript": "^4.5.4"
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.7.3"
   },
   "author": "ivan-ravecca",
   "license": "ISC"

@@ -2,20 +2,11 @@ import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
 dotenv.config();
 const sgMail = require("@sendgrid/mail");
-import cors from "cors";
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 const EMAIL_TO = process.env.EMAIL_TO;
 const EMAIL_FROM = process.env.EMAIL_FROM;
 
 const router = Router();
-
-const corsOptions = {
-  origin: /\.escuelaenfermeria\.com\.uy$/,
-  credentials: true,
-};
-
-router.use(cors(corsOptions));
-
 router.post("/send", async (req: Request, res: Response) => {
   const { name, email, message } = req.body;
 
