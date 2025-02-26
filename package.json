@@ -1,0 +1,29 @@
+{
+  "name": "escuela-api",
+  "version": "1.0.0",
+  "description": "A simple Express server to send emails.",
+  "main": "src/app.ts",
+  "scripts": {
+    "start": "ts-node src/app.ts",
+    "build": "tsc",
+    "dev": "ts-node-dev src/app.ts"
+  },
+  "dependencies": {
+    "@sendgrid/mail": "^8.1.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/dotenv": "^6.1.1",
+    "@types/express": "^5.0.0",
+    "eslint": "^9.21.0",
+    "prettier": "^3.5.1",
+    "ts-node": "^10.4.0",
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.5.4"
+  },
+  "author": "ivan-ravecca",
+  "license": "ISC"
+}
