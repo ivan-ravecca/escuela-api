@@ -42,35 +42,26 @@ interface CorsOptions {
 //   credentials: true,
 // };
 
-const corsOptions: CorsOptions = {
-  origin: function (
-    origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void,
-  ): void {
-    const allowedOrigins = [
-      "https://escuelaenfermeria.com.uy",
-      "https://escuelaenfermeria.com.uy/",
-      "https://demo.escuelaenfermeria.com.uy",
-      "https://demo.escuelaenfermeria.com.uy/",
-      // Add any other subdomains you need
-    ];
-
-    // Then in your origin function:
-    const isAllowed = true; //!origin || allowedOrigins.includes(origin);
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-};
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: [
+      "https://escuelaenfermeria.com.uy",
+      "https://escuelaenfermeria.com.uy/",
+      "https://demo.escuelaenfermeria.com.uy",
+    ],
+    methods: ["POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  }),
+);
+
+// Add explicit OPTIONS handling
+app.options("*", cors());
+
+//app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use("/email", emailRoutes);
 app.get("/", (req, res) => {
