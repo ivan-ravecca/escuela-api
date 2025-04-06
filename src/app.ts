@@ -1,115 +1,60 @@
-import express from "express";
+import express, { Request, Response } from "express";
 import bodyParser from "body-parser";
 import emailRoutes from "./routes/email";
 import dotenv from "dotenv";
 import cors from "cors";
 dotenv.config();
-// interface CorsOptions {
-//   origin: (
-//     origin: string | undefined,
-//     callback: (err: Error | null, allow?: boolean) => void,
-//   ) => void;
-//   credentials: boolean;
-// }
+interface CorsOptions {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ) => void;
+  credentials: boolean;
+}
 
-// const corsOptions: CorsOptions = {
-//   origin: function (
-//     origin: string | undefined,
-//     callback: (err: Error | null, allow?: boolean) => void,
-//   ): void {
-//     const allowedOrigins: RegExp[] = [
-//       /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/,
-//     ];
+const corsOptions: CorsOptions = {
+  origin: function (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ): void {
+    const allowedOrigins: RegExp[] = [
+      /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/,
+    ];
 
-//     if (!origin) {
-//       return callback(null, true); // allow non-browser clients like curl, Postman, etc.
-//     }
+    if (!origin) {
+      return callback(null, true); // allow non-browser clients like curl, Postman, etc.
+    }
 
-//     console.error(`Received origin: "${origin}"`); // Debug the actual origin
+    console.error(`Received origin: "${origin}"`); // Debug the actual origin
 
-//     const isAllowed: boolean = allowedOrigins.some((pattern: RegExp) => {
-//       const matches = pattern.test(origin);
-//       console.error(`Testing "${origin}" against ${pattern}: ${matches}`);
-//       return matches;
-//     });
+    const isAllowed: boolean = allowedOrigins.some((pattern: RegExp) => {
+      const matches = pattern.test(origin);
+      console.error(`Testing "${origin}" against ${pattern}: ${matches}`);
+      return matches;
+    });
 
-//     if (isAllowed) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error("Not allowed by CORS"));
-//     }
-//   },
-//   credentials: true,
-// };
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// app.use(
-//   cors({
-//     ...corsOptions,
-//     methods: ["GET", "POST", "OPTIONS"],
-//     allowedHeaders: [
-//       "Content-Type",
-//       "Authorization",
-//       "accept",
-//       "accept-encoding",
-//       "accept-language",
-//       "content-length",
-//       "origin",
-//       "priority",
-//       "referer",
-//       "user-agent",
-//     ],
-//     optionsSuccessStatus: 204,
-//   }),
-// );
+app.use(cors(corsOptions));
 
-//----
-const allowedOrigins = [
-  "https://escuelaenfermeria.com.uy",
-  "https://www.escuelaenfermeria.com.uy",
-  "https://demo.escuelaenfermeria.com.uy",
-];
-
-app.use((req, res, next) => {
+app.options("*", (req: Request, res: Response) => {
   const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.header("Access-Control-Allow-Credentials", "true");
-  }
-
-  // Handle preflight
-  if (req.method === "OPTIONS") {
-    return res.status(204).end();
-  }
-
-  next();
-});
-
-app.use(
-  cors({
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-    optionsSuccessStatus: 204,
-  }),
-);
-
-app.options("*", (req, res) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.header("Access-Control-Allow-Credentials", "true");
-  }
+  res.header("Access-Control-Allow-Origin", origin);
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
   res.status(204).end();
 });
-//----
 
 app.use(bodyParser.json());
 app.use("/email", emailRoutes);
