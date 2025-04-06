@@ -25,11 +25,11 @@ const corsOptions: CorsOptions = {
       return callback(null, true); // allow non-browser clients like curl, Postman, etc.
     }
 
-    console.log(`Received origin: "${origin}"`); // Debug the actual origin
+    console.error(`Received origin: "${origin}"`); // Debug the actual origin
 
     const isAllowed: boolean = allowedOrigins.some((pattern: RegExp) => {
       const matches = pattern.test(origin);
-      console.log(`Testing "${origin}" against ${pattern}: ${matches}`);
+      console.error(`Testing "${origin}" against ${pattern}: ${matches}`);
       return matches;
     });
 
