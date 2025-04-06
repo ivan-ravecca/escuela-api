@@ -59,19 +59,8 @@ app.use(
   }),
 );
 
-// Add explicit OPTIONS handling
-app.options("*", cors());
-
 //app.use(cors(corsOptions));
 
-//----
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "https://escuelaenfermeria.com.uy");
-  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
-//----
 app.use(bodyParser.json());
 app.use("/email", emailRoutes);
 app.get("/", (req, res) => {
