@@ -52,9 +52,10 @@ app.use(
       "https://escuelaenfermeria.com.uy/",
       "https://demo.escuelaenfermeria.com.uy",
     ],
-    methods: ["POST", "OPTIONS"],
+    methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
+    optionsSuccessStatus: 204,
   }),
 );
 
@@ -62,6 +63,15 @@ app.use(
 app.options("*", cors());
 
 //app.use(cors(corsOptions));
+
+//----
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "https://escuelaenfermeria.com.uy");
+  res.header("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+//----
 app.use(bodyParser.json());
 app.use("/email", emailRoutes);
 app.get("/", (req, res) => {
