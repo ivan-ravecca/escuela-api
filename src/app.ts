@@ -49,7 +49,9 @@ const corsOptions: CorsOptions = {
   ): void {
     const allowedOrigins = [
       "https://escuelaenfermeria.com.uy",
+      "https://escuelaenfermeria.com.uy/",
       "https://demo.escuelaenfermeria.com.uy",
+      "https://demo.escuelaenfermeria.com.uy/",
       // Add any other subdomains you need
     ];
 
