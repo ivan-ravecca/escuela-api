@@ -4,8 +4,36 @@ import emailRoutes from "./routes/email";
 import dotenv from "dotenv";
 import cors from "cors";
 dotenv.config();
-const corsOptions = {
-  origin: /\.escuelaenfermeria\.com\.uy$/,
+interface CorsOptions {
+  origin: (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ) => void;
+  credentials: boolean;
+}
+
+const corsOptions: CorsOptions = {
+  origin: function (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ): void {
+    const allowedOrigins: RegExp[] = [
+      /^https?:\/\/([a-zA-Z0-9-]+\.)?escuelaenfermeria\.com\.uy$/,
+    ];
+
+    if (!origin) {
+      return callback(null, true); // allow non-browser clients like curl, Postman, etc.
+    }
+
+    const isAllowed: boolean = allowedOrigins.some((pattern: RegExp) =>
+      pattern.test(origin),
+    );
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
 };
 
