@@ -12,54 +12,58 @@ interface CorsOptions {
   credentials: boolean;
 }
 
-// const corsOptions: CorsOptions = {
-//   origin: function (
-//     origin: string | undefined,
-//     callback: (err: Error | null, allow?: boolean) => void,
-//   ): void {
-//     const allowedOrigins: RegExp[] = [
-//       /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/,
-//     ];
+const corsOptions: CorsOptions = {
+  origin: function (
+    origin: string | undefined,
+    callback: (err: Error | null, allow?: boolean) => void,
+  ): void {
+    const allowedOrigins: RegExp[] = [
+      /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/,
+    ];
 
-//     if (!origin) {
-//       return callback(null, true); // allow non-browser clients like curl, Postman, etc.
-//     }
+    if (!origin) {
+      return callback(null, true); // allow non-browser clients like curl, Postman, etc.
+    }
 
-//     console.error(`Received origin: "${origin}"`); // Debug the actual origin
+    console.error(`Received origin: "${origin}"`); // Debug the actual origin
 
-//     const isAllowed: boolean = allowedOrigins.some((pattern: RegExp) => {
-//       const matches = pattern.test(origin);
-//       console.error(`Testing "${origin}" against ${pattern}: ${matches}`);
-//       return matches;
-//     });
+    const isAllowed: boolean = allowedOrigins.some((pattern: RegExp) => {
+      const matches = pattern.test(origin);
+      console.error(`Testing "${origin}" against ${pattern}: ${matches}`);
+      return matches;
+    });
 
-//     if (isAllowed) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error("Not allowed by CORS"));
-//     }
-//   },
-//   credentials: true,
-// };
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(
   cors({
-    origin: [
-      "https://escuelaenfermeria.com.uy",
-      "https://escuelaenfermeria.com.uy/",
-      "https://demo.escuelaenfermeria.com.uy",
-    ],
+    ...corsOptions,
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "accept",
+      "accept-encoding",
+      "accept-language",
+      "content-length",
+      "origin",
+      "priority",
+      "referer",
+      "user-agent",
+    ],
     optionsSuccessStatus: 204,
   }),
 );
-
-//app.use(cors(corsOptions));
 
 app.use(bodyParser.json());
 app.use("/email", emailRoutes);
