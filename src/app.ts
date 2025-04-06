@@ -18,16 +18,21 @@ const corsOptions: CorsOptions = {
     callback: (err: Error | null, allow?: boolean) => void,
   ): void {
     const allowedOrigins: RegExp[] = [
-      /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy$/,
+      /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/,
     ];
 
     if (!origin) {
       return callback(null, true); // allow non-browser clients like curl, Postman, etc.
     }
 
-    const isAllowed: boolean = allowedOrigins.some((pattern: RegExp) =>
-      pattern.test(origin),
-    );
+    console.log(`Received origin: "${origin}"`); // Debug the actual origin
+
+    const isAllowed: boolean = allowedOrigins.some((pattern: RegExp) => {
+      const matches = pattern.test(origin);
+      console.log(`Testing "${origin}" against ${pattern}: ${matches}`);
+      return matches;
+    });
+
     if (isAllowed) {
       callback(null, true);
     } else {
