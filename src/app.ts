@@ -18,7 +18,7 @@ const corsOptions: CorsOptions = {
     callback: (err: Error | null, allow?: boolean) => void,
   ): void {
     const allowedOrigins: RegExp[] = [
-      /^https?:\/\/([a-zA-Z0-9-]+\.)?escuelaenfermeria\.com\.uy$/,
+      /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy$/,
     ];
 
     if (!origin) {
