@@ -23,7 +23,8 @@
     "prettier": "^3.5.1",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "winston": "^3.17.0"
   },
   "author": "ivan-ravecca",
   "license": "ISC"

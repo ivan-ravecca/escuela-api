@@ -1,20 +1,49 @@
+import winston from "winston";
+import path from "path";
 import express from "express";
 import bodyParser from "body-parser";
 import emailRoutes from "./routes/email";
 import dotenv from "dotenv";
 import cors from "cors";
 dotenv.config();
+
+const logger = winston.createLogger({
+  level: "info",
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json(),
+  ),
+  defaultMeta: { service: "escuela-api" },
+  transports: [
+    // Write to logs directory
+    new winston.transports.File({
+      filename: path.join(__dirname, "../logs/error.log"),
+      level: "error",
+    }),
+    new winston.transports.File({
+      filename: path.join(__dirname, "../logs/combined.log"),
+    }),
+    // Also log to console
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple(),
+      ),
+    }),
+  ],
+});
+
 const corsOptions = {
   origin: function (origin: any, callback: any) {
-    console.error(`Received request with origin: "${origin}"`);
+    logger.info(`Received request with origin: "${origin}"`);
 
     const pattern = /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/;
 
     if (!origin || pattern.test(origin)) {
-      console.error(`Origin "${origin}" is allowed`);
+      logger.info(`Origin "${origin}" is allowed`);
       callback(null, true);
     } else {
-      console.error(`Origin "${origin}" is NOT allowed`);
+      logger.info(`Origin "${origin}" is NOT allowed`);
       callback(new Error("Not allowed by CORS"));
     }
   },
