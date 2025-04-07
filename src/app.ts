@@ -32,7 +32,7 @@ const logger = winston.createLogger({
     }),
   ],
 });
-
+logger.info("perepepep");
 const corsOptions = {
   origin: function (origin: any, callback: any) {
     logger.info(`Received request with origin: "${origin}"`);
