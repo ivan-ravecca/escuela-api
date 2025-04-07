@@ -17,35 +17,39 @@ interface EmailMessage {
 }
 
 router.post("/send", async (req: Request, res: Response) => {
-  const { name, email, message } = req.body;
-
-  const msg = {
-    to: EMAIL_TO,
-    from: EMAIL_FROM,
-    subject: `Contacto desde la web - ${name}`,
-    text: `El siguiente es un mensaje generado desde la web:
-          Nombre: ${name}
-          Email: ${email}
-          Mensaje: ${message}`,
-    html: `El siguiente es un mensaje generado desde la web:<br />
-         <ul><li><strong>Nombre:</strong> ${name}</li>
-         <li><strong>Email:</strong> ${email}</li>
-         <li><strong>Mensaje:</strong> ${message}</li></ul>`,
-  };
-  // const origin = req.headers.origin;
-  // res.header("Access-Control-Allow-Origin", origin);
-  // res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  // res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  // res.header("Access-Control-Allow-Credentials", "true");
-  sgMail
-    .send(msg as EmailMessage)
-    .then((): void => {
-      res.status(202).send();
-    })
-    .catch((error: Error): void => {
-      res.status(500).send("Error sending email: " + error.message);
-    });
+  res.status(202).send();
 });
+
+// router.post("/send", async (req: Request, res: Response) => {
+//   const { name, email, message } = req.body;
+
+//   const msg = {
+//     to: EMAIL_TO,
+//     from: EMAIL_FROM,
+//     subject: `Contacto desde la web - ${name}`,
+//     text: `El siguiente es un mensaje generado desde la web:
+//           Nombre: ${name}
+//           Email: ${email}
+//           Mensaje: ${message}`,
+//     html: `El siguiente es un mensaje generado desde la web:<br />
+//          <ul><li><strong>Nombre:</strong> ${name}</li>
+//          <li><strong>Email:</strong> ${email}</li>
+//          <li><strong>Mensaje:</strong> ${message}</li></ul>`,
+//   };
+//   // const origin = req.headers.origin;
+//   // res.header("Access-Control-Allow-Origin", origin);
+//   // res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+//   // res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+//   // res.header("Access-Control-Allow-Credentials", "true");
+//   sgMail
+//     .send(msg as EmailMessage)
+//     .then((): void => {
+//       res.status(202).send();
+//     })
+//     .catch((error: Error): void => {
+//       res.status(500).send("Error sending email: " + error.message);
+//     });
+// });
 
 router.post("/inquire", async (req: Request, res: Response) => {
   const { name, email, phone, course, ci, year, inquire } = req.body;
