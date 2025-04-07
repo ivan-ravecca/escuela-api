@@ -17,15 +17,11 @@ const logger = winston.createLogger({
   transports: [
     // Write to logs directory
     new winston.transports.File({
-      filename: path.join(
-        "/var/www/vhosts/escuelaenfermeria.com.uy/logs/custom.log",
-      ),
+      filename: path.join(__dirname, "../error.log"),
       level: "error",
     }),
     new winston.transports.File({
-      filename: path.join(
-        "/var/www/vhosts/escuelaenfermeria.com.uy/logs/error_log",
-      ),
+      filename: path.join(__dirname, "../combined.log"),
     }),
     // Also log to console
     new winston.transports.Console({
