@@ -49,22 +49,9 @@ app.use(
   cors({
     ...corsOptions,
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Access-Control-Allow-Origin",
-      "Access-Control-Allow-Credentials",
-    ],
+    allowedHeaders: ["Content-Type"],
   }),
 );
-
-// app.options("*", (req: Request, res: Response) => {
-//   const origin = req.headers.origin;
-//   res.header("Access-Control-Allow-Origin", origin);
-//   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-//   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//   res.header("Access-Control-Allow-Credentials", "true");
-//   res.status(204).end();
-// });
 
 app.use(bodyParser.json());
 app.use("/email", emailRoutes);

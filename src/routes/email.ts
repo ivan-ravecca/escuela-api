@@ -32,11 +32,11 @@ router.post("/send", async (req: Request, res: Response) => {
          <li><strong>Email:</strong> ${email}</li>
          <li><strong>Mensaje:</strong> ${message}</li></ul>`,
   };
-  const origin = req.headers.origin;
-  res.header("Access-Control-Allow-Origin", origin);
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  res.header("Access-Control-Allow-Credentials", "true");
+  // const origin = req.headers.origin;
+  // res.header("Access-Control-Allow-Origin", origin);
+  // res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  // res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  // res.header("Access-Control-Allow-Credentials", "true");
   sgMail
     .send(msg as EmailMessage)
     .then((): void => {
