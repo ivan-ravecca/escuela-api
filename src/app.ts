@@ -24,7 +24,7 @@ const logger = winston.createLogger({
     }),
     new winston.transports.File({
       filename: path.join(
-        "/var/www/vhosts/escuelaenfermeria.com.uy/logs/combined.log",
+        "/var/www/vhosts/escuelaenfermeria.com.uy/logs/error_log",
       ),
     }),
     // Also log to console
