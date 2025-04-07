@@ -1,63 +1,21 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import bodyParser from "body-parser";
-//import emailRoutes from "./routes/email";
+import emailRoutes from "./routes/email";
 import dotenv from "dotenv";
 import cors from "cors";
 dotenv.config();
-interface CorsOptions {
-  origin: (
-    origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void,
-  ) => void;
-  credentials: boolean;
-}
-
-const corsOptions: CorsOptions = {
-  origin: function (
-    origin: string | undefined,
-    callback: (err: Error | null, allow?: boolean) => void,
-  ): void {
-    const allowedOrigins: RegExp[] = [
-      /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/,
-    ];
-
-    if (!origin) {
-      return callback(null, true); // allow non-browser clients like curl, Postman, etc.
-    }
-
-    console.error(`Received origin: "${origin}"`); // Debug the actual origin
-
-    const isAllowed: boolean = allowedOrigins.some((pattern: RegExp) => {
-      const matches = pattern.test(origin);
-      console.error(`Testing "${origin}" against ${pattern}: ${matches}`);
-      return matches;
-    });
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+const corsOptions = {
+  origin: /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/,
   credentials: true,
 };
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// app.use(
-//   cors({
-//     ...corsOptions,
-//     methods: ["GET", "POST", "OPTIONS"],
-//     allowedHeaders: ["Content-Type"],
-//   }),
-// );
-
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
-//app.use("/email", emailRoutes);
-app.get("/test", (req, res) => {
-  const origin = req.headers.origin;
-  res.header("Access-Control-Allow-Origin", origin);
+app.use("/email", emailRoutes);
+app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
