@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import bodyParser from "body-parser";
-import emailRoutes from "./routes/email";
+//import emailRoutes from "./routes/email";
 import dotenv from "dotenv";
 import cors from "cors";
 dotenv.config();
@@ -54,7 +54,7 @@ app.use(
 );
 
 app.use(bodyParser.json());
-app.use("/email", emailRoutes);
+//app.use("/email", emailRoutes);
 app.get("/", (req, res) => {
   res.send("Hello World");
 });
