@@ -45,13 +45,13 @@ const corsOptions: CorsOptions = {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(
-  cors({
-    ...corsOptions,
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type"],
-  }),
-);
+// app.use(
+//   cors({
+//     ...corsOptions,
+//     methods: ["GET", "POST", "OPTIONS"],
+//     allowedHeaders: ["Content-Type"],
+//   }),
+// );
 
 app.use(bodyParser.json());
 //app.use("/email", emailRoutes);
