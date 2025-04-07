@@ -5,7 +5,19 @@ import dotenv from "dotenv";
 import cors from "cors";
 dotenv.config();
 const corsOptions = {
-  origin: /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/,
+  origin: function (origin: any, callback: any) {
+    console.error(`Received request with origin: "${origin}"`);
+
+    const pattern = /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/;
+
+    if (!origin || pattern.test(origin)) {
+      console.error(`Origin "${origin}" is allowed`);
+      callback(null, true);
+    } else {
+      console.error(`Origin "${origin}" is NOT allowed`);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true,
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
