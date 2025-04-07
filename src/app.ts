@@ -14,6 +14,7 @@ const corsOptions = {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use("/email", emailRoutes);
