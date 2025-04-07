@@ -55,7 +55,9 @@ app.use(
 
 app.use(bodyParser.json());
 //app.use("/email", emailRoutes);
-app.get("/", (req, res) => {
+app.get("/test", (req, res) => {
+  const origin = req.headers.origin;
+  res.header("Access-Control-Allow-Origin", origin);
   res.send("Hello World");
 });
 
