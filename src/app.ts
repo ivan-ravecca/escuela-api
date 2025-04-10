@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import emailRoutes from "./routes/email";
 import dotenv from "dotenv";
 import cors from "cors";
+import diplomaRoutes from "./routes/diploma";
 dotenv.config();
 
 const corsOptions = {
@@ -28,6 +29,8 @@ app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use("/email", emailRoutes);
+app.use("/diploma", diplomaRoutes);
+
 app.get("/", (req, res) => {
   res.send("Hello World");
 });
