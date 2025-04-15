@@ -5,6 +5,8 @@ import emailRoutes from "./routes/email";
 import dotenv from "dotenv";
 import cors from "cors";
 import diplomaRoutes from "./routes/diploma";
+import { router as authRoutes } from "./routes/authRoutes";
+
 dotenv.config();
 
 const corsOptions = {
@@ -25,9 +27,11 @@ const corsOptions = {
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(express.urlencoded({ extended: true }));
 app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
+app.use("/auth", authRoutes);
 app.use("/email", emailRoutes);
 app.use("/diploma", diplomaRoutes);
 

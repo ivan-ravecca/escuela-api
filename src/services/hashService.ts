@@ -7,18 +7,20 @@ import crypto from "crypto";
  */
 function createHash(fileId: string): string | null {
   try {
-    // Usar HMAC con una clave secreta para mayor seguridad
-    const hmac = crypto.createHmac("sha256", process.env.HASH_SECRET || "");
-    hmac.update(fileId);
+    // Encrypt the fileId using AES for reversibility
+    const cipher = crypto.createCipheriv(
+      "aes-256-cbc",
+      crypto.scryptSync(process.env.HASH_SECRET || "", "salt", 32),
+      Buffer.alloc(16, 0), // Initialization vector (IV) set to 16 bytes of zeros
+    );
 
-    // Convertir a Base64 y hacerlo URL-safe
-    return hmac
-      .digest("base64")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/=+$/, "");
+    let encrypted = cipher.update(fileId, "utf8", "base64");
+    encrypted += cipher.final("base64");
+
+    // Make the encrypted string URL-safe
+    return encrypted.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   } catch (error) {
-    console.error("Error al crear el hash:", error);
+    console.error("Error al crear el hash reversible:", error);
     return null;
   }
 }
@@ -30,24 +32,24 @@ function createHash(fileId: string): string | null {
  */
 function verifyHash(hash: string): string | null {
   try {
-    // Aquí necesitaríamos una forma de mapear el hash de vuelta al fileId
-    // Una opción sería almacenar los mapeos en una base de datos
-    // Para simplificar, podríamos usar una tabla de mapeos en memoria
+    // Decode the URL-safe Base64 string back to the original Base64 format
+    const base64Hash =
+      hash.replace(/-/g, "+").replace(/_/g, "/") +
+      "=".repeat((4 - (hash.length % 4)) % 4);
 
-    // Esta es una implementación simple que no es viable en producción
-    // En producción, deberías usar una base de datos para almacenar estos mapeos
+    // Decrypt the hash using AES to retrieve the original fileId
+    const decipher = crypto.createDecipheriv(
+      "aes-256-cbc",
+      crypto.scryptSync(process.env.HASH_SECRET || "", "salt", 32),
+      Buffer.alloc(16, 0), // Initialization vector (IV) set to 16 bytes of zeros
+    );
 
-    // TODO: Implementar la lógica de verificación real
-    // Opciones:
-    // 1. Almacenar los mapeos hash -> fileId en una base de datos
-    // 2. Usar una función de encriptación reversible en lugar de un hash
+    let decrypted = decipher.update(base64Hash, "base64", "utf8");
+    decrypted += decipher.final("utf8");
 
-    // Para simplificar, devolvemos null si no podemos verificar el hash
-    return null;
-
-    // En una implementación real, aquí recuperarías el fileId basado en el hash
+    return decrypted;
   } catch (error) {
-    console.error("Error al verificar el hash:", error);
+    console.error("Error al verificar el hash reversible:", error);
     return null;
   }
 }

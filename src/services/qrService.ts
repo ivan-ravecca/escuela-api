@@ -1,9 +1,10 @@
-const QRCode = require("qrcode");
+import QRCode from "qrcode";
+import { Buffer } from "buffer";
 
 // Generar un código QR a partir de una URL
 interface QRCodeOptions {
   errorCorrectionLevel: "L" | "M" | "Q" | "H";
-  type: string;
+  type: "png";
   quality: number;
   margin: number;
   color: {
@@ -17,7 +18,7 @@ async function generateQRCode(url: string): Promise<Buffer> {
     // Opciones para personalizar el código QR
     const options: QRCodeOptions = {
       errorCorrectionLevel: "H", // Alta corrección de errores
-      type: "image/png",
+      type: "png",
       quality: 0.92,
       margin: 1,
       color: {

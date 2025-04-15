@@ -1,36 +1,13 @@
-import { google, drive_v3 } from "googleapis";
+import { google } from "googleapis";
 import { Readable } from "stream";
-
-// Define types
-interface OAuthTokens {
-  access_token: string;
-  refresh_token?: string;
-  scope?: string;
-  token_type?: string;
-  expiry_date?: number;
-}
-
-// Configurar OAuth2
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  process.env.GOOGLE_REDIRECT_URI,
-);
+import { oauth2Client, getTokens } from "../routes/authRoutes";
 
 /**
- * Esta función debería ser llamada después de autenticar al usuario
- * Para simplificar, aquí se incluiría el token de acceso directamente
- * En una aplicación real, este token debería obtenerse del proceso de OAuth
- * y almacenarse de forma segura (por ejemplo, en una base de datos)
+ * Extrae el ID del archivo de un link de Google Drive
+ * @param url URL de Google Drive
+ * @returns ID del archivo o null si no se encuentra
  */
-function setCredentials(tokens: OAuthTokens): void {
-  oauth2Client.setCredentials(tokens);
-}
-
-/**
- * Extraer el ID del archivo de un link de Google Drive
- */
-function extractFileIdFromUrl(url: string): string | null {
+export function extractFileIdFromUrl(url: string): string | null {
   try {
     const regex = /\/file\/d\/([^\/]+)/;
     const match = url.match(regex);
@@ -42,14 +19,22 @@ function extractFileIdFromUrl(url: string): string | null {
 }
 
 /**
- * Obtener un archivo de Google Drive
+ * Obtiene un archivo de Google Drive como stream
+ * @param fileId ID del archivo en Google Drive
+ * @returns Stream del archivo
  */
-async function getDriveFile(fileId: string): Promise<Readable> {
+export async function getDriveFile(fileId: string): Promise<Readable> {
   try {
-    const drive: drive_v3.Drive = google.drive({
-      version: "v3",
-      auth: oauth2Client,
-    });
+    // Verificar si tenemos tokens
+    const tokens = getTokens();
+    if (!tokens) {
+      throw new Error("No autenticado con Google Drive");
+    }
+
+    // Actualizar credenciales
+    oauth2Client.setCredentials(tokens);
+
+    const drive = google.drive({ version: "v3", auth: oauth2Client });
 
     // Verificar que el archivo existe y es accesible
     const fileMetadata = await drive.files.get({
@@ -71,11 +56,9 @@ async function getDriveFile(fileId: string): Promise<Readable> {
       { responseType: "stream" },
     );
 
-    return response.data as Readable;
+    return response.data as unknown as Readable;
   } catch (error) {
     console.error("Error al obtener el archivo de Google Drive:", error);
     throw error;
   }
 }
-
-export { setCredentials, getDriveFile, extractFileIdFromUrl };

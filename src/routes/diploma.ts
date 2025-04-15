@@ -5,39 +5,12 @@ import { generateQRCode } from "../services/qrService";
 
 const router: Router = express.Router();
 
-// Endpoint 1: Visualizar el PDF usando el hash
-router.get(
-  "/:diplomaId",
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      const diplomaId: string = req.params.diplomaId;
-
-      // Verificar y decodificar el hash para obtener el ID del archivo
-      const fileId: string | null = verifyHash(diplomaId);
-
-      if (!fileId || typeof fileId !== "string") {
-        res.status(400).send("ID de diploma inválido");
-        return;
-      }
-
-      // Obtener el archivo de Google Drive
-      const file = await getDriveFile(fileId);
-
-      // Configurar los encabezados para visualizar el PDF
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `inline; filename="diploma.pdf"`);
-
-      // Enviar el archivo como respuesta
-      file.pipe(res);
-    } catch (error) {
-      console.error("Error al visualizar el diploma:", error);
-      res.status(500).send("Error al procesar la solicitud");
-    }
-  },
-);
+router.get("/", (req: Request, res: Response) => {
+  res.send("You cannot GET diploma");
+});
 
 // Endpoint 2: Generar código QR para un link de Google Drive
-router.get("/generar", async (req: Request, res: Response): Promise<void> => {
+router.get("/generate", async (req: Request, res: Response): Promise<void> => {
   try {
     const driveUrl: string = req.query.link as string;
 
@@ -76,5 +49,36 @@ router.get("/generar", async (req: Request, res: Response): Promise<void> => {
     res.status(500).send("Error al procesar la solicitud");
   }
 });
+
+// Endpoint 1: Visualizar el PDF usando el hash
+router.get(
+  "/:diplomaId",
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const diplomaId: string = req.params.diplomaId;
+
+      // Verificar y decodificar el hash para obtener el ID del archivo
+      const fileId: string | null = verifyHash(diplomaId);
+
+      if (!fileId) {
+        res.status(400).send("ID de diploma inválido");
+        return;
+      }
+
+      // Obtener el archivo de Google Drive
+      const file = await getDriveFile(fileId);
+
+      // Configurar los encabezados para visualizar el PDF
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `inline; filename="diploma.pdf"`);
+
+      // Enviar el archivo como respuesta
+      file.pipe(res);
+    } catch (error) {
+      console.error("Error al visualizar el diploma:", error);
+      res.status(500).send("Error al procesar la solicitud");
+    }
+  },
+);
 
 export default router;
