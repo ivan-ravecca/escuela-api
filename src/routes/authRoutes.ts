@@ -18,10 +18,14 @@ let tokens: GoogleTokens | null = null;
 
 // Ruta para iniciar la autenticación
 router.get("/google", (req: Request, res: Response) => {
+  const returnUrl = (req.query.returnUrl as string) || "/auth/status";
+  console.log("GOOGLE AUTH returnUrl", returnUrl);
+
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: "offline",
     scope: ["https://www.googleapis.com/auth/drive.readonly"],
-    prompt: "consent", // Para obtener siempre refresh_token
+    prompt: "consent", // Para obtener siempre refresh_token,
+    state: returnUrl, // Guardar la URL de retorno
   });
   res.redirect(authUrl);
 });
@@ -30,7 +34,9 @@ router.get("/google", (req: Request, res: Response) => {
 router.get(
   "/google/callback",
   async (req: express.Request, res: express.Response): Promise<void> => {
-    const { code } = req.query;
+    const { code, state } = req.query;
+
+    console.log("GOOGLE CALLBACK state", state);
 
     if (!code || typeof code !== "string") {
       res.status(400).send("Código de autorización faltante o inválido");
@@ -48,7 +54,10 @@ router.get(
       // En producción: guardar en base de datos
       console.log("Autenticación exitosa. Tokens obtenidos.");
 
-      res.redirect("/auth/status");
+      // Redirect back to the original URL if available
+      const returnUrl = (state as string) || "/auth/status";
+      console.log(`>>>>>>> Redirecting to ${returnUrl}`);
+      res.redirect(returnUrl);
     } catch (error) {
       console.error("Error en el callback de autenticación:", error);
       res.status(500).send("Error en la autenticación");

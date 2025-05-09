@@ -1,5 +1,9 @@
 import express, { Request, Response, Router } from "express";
-import { getDriveFile, extractFileIdFromUrl } from "../services/driveService";
+import {
+  getDriveFile,
+  extractFileIdFromUrl,
+  AuthenticationRequiredError,
+} from "../services/driveService";
 import { createHash, verifyHash } from "../services/hashService";
 import { generateQRCode } from "../services/qrService";
 
@@ -54,13 +58,14 @@ router.get("/generate", async (req: Request, res: Response): Promise<void> => {
 router.get(
   "/:diplomaId",
   async (req: Request, res: Response): Promise<void> => {
+    const diplomaId: string = req.params.diplomaId;
+    console.log(`ID del diploma: ${diplomaId}`);
     try {
-      const diplomaId: string = req.params.diplomaId;
-
       // Verificar y decodificar el hash para obtener el ID del archivo
       const fileId: string | null = verifyHash(diplomaId);
 
       if (!fileId) {
+        console.log(`diploma Invalid: ${diplomaId}`);
         res.status(400).send("ID de diploma inválido");
         return;
       }
@@ -75,8 +80,20 @@ router.get(
       // Enviar el archivo como respuesta
       file.pipe(res);
     } catch (error) {
-      console.error("Error al visualizar el diploma:", error);
-      res.status(500).send("Error al procesar la solicitud");
+      console.error("1 - Error al obtener el archivo:", error);
+      // Check if authentication is required
+      if (error instanceof AuthenticationRequiredError) {
+        // Store the diploma ID in the session or as a URL parameter
+        const returnUrl = `/diploma/${diplomaId}`;
+        const encodedReturnUrl = encodeURIComponent(returnUrl);
+        console.error("2 - Guardo el redirect URL", encodedReturnUrl);
+
+        // Redirect to Google authentication with return URL
+        res.redirect(`/auth/google?returnUrl=${encodedReturnUrl}`);
+      } else {
+        console.error("Error al visualizar el diploma:", error);
+        res.status(500).send("Error al procesar la solicitud");
+      }
     }
   },
 );
