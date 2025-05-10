@@ -3,6 +3,14 @@ import { Readable } from "stream";
 import { oauth2Client, getTokens } from "../routes/authRoutes";
 import { DriveFileResponse } from "../types/index";
 
+import fs from "fs";
+import path from "path";
+const KEY_FILE_PATH = path.join(
+  __dirname,
+  "../../keys/service-account-key.json",
+);
+//console.log("KEY_FILE_PATH", KEY_FILE_PATH);
+
 export class AuthenticationRequiredError extends Error {
   constructor(message: string = "Authentication required") {
     super(message);
@@ -81,18 +89,24 @@ export async function getDriveFile(fileId: string): Promise<Readable> {
 async function getDriveClientJWT(): Promise<any> {
   try {
     // Create JWT client using service account
-    const auth = new google.auth.JWT(
-      process.env.GOOGLE_SHARE_CLIENT_EMAIL,
-      "",
-      process.env.GOOGLE_SHARE_CLIENT_PRIVATE_KEY,
-      ["https://www.googleapis.com/auth/drive.readonly"],
-    );
-
-    // Create and return Drive client
-    return google.drive({
-      version: "v3",
-      auth,
+    const authGoogle = new google.auth.GoogleAuth({
+      keyFile: KEY_FILE_PATH,
+      scopes: ["https://www.googleapis.com/auth/drive.readonly"],
     });
+    const authClient = await authGoogle.getClient();
+    return google.drive({ version: "v3", auth: authClient as any });
+    // const auth = new google.auth.JWT(
+    //   process.env.GOOGLE_SHARE_CLIENT_EMAIL,
+    //   "",
+    //   process.env.GOOGLE_SHARE_CLIENT_PRIVATE_KEY,
+    //   ["https://www.googleapis.com/auth/drive.readonly"],
+    // );
+
+    // // Create and return Drive client
+    // return google.drive({
+    //   version: "v3",
+    //   auth,
+    // });
   } catch (error) {
     //console.error("Failed to create Drive client:", error);
     throw error;
