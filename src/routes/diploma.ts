@@ -1,6 +1,7 @@
 import express, { Request, Response, Router } from "express";
 import {
   getDriveFile,
+  getDriveFileJWT,
   extractFileIdFromUrl,
   AuthenticationRequiredError,
 } from "../services/driveService";
@@ -71,7 +72,8 @@ router.get(
       }
 
       // Obtener el archivo de Google Drive
-      const file = await getDriveFile(fileId);
+      //const file = await getDriveFile(fileId);
+      const file = await getDriveFileJWT(fileId);
 
       // Configurar los encabezados para visualizar el PDF
       res.setHeader("Content-Type", "application/pdf");

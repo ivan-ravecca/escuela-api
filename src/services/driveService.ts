@@ -72,3 +72,62 @@ export async function getDriveFile(fileId: string): Promise<Readable> {
     throw error;
   }
 }
+
+/**
+ * Creates an authenticated Google Drive client using JWT
+ * @returns Authenticated Google Drive client
+ */
+async function getDriveClientJWT(): Promise<any> {
+  try {
+    // Create JWT client using service account
+    const auth = new google.auth.JWT(
+      process.env.GOOGLE_SHARE_CLIENT_EMAIL,
+      "",
+      process.env.GOOGLE_SHARE_CLIENT_PRIVATE_KEY,
+      ["https://www.googleapis.com/auth/drive.readonly"],
+    );
+
+    // Create and return Drive client
+    return google.drive({
+      version: "v3",
+      auth,
+    });
+  } catch (error) {
+    console.error("Failed to create Drive client:", error);
+    throw error;
+  }
+}
+
+export async function getDriveFileJWT(fileId: string): Promise<Readable> {
+  console.log(`Obteniendo archivo de Google Drive con ID: ${fileId}`);
+  try {
+    // Get authenticated client
+    const drive = await getDriveClientJWT();
+
+    // Verificar que el archivo existe y es accesible
+    const fileMetadata = await drive.files.get({
+      fileId: fileId,
+      fields: "name,mimeType",
+    });
+
+    // Comprobar que es un PDF
+    if (fileMetadata.data.mimeType !== "application/pdf") {
+      console.log(`El archivo no es un PDF`);
+      throw new Error("El archivo no es un PDF");
+    }
+
+    // Obtener el contenido del archivo como un stream
+    const response = await drive.files.get(
+      {
+        fileId: fileId,
+        alt: "media",
+      },
+      { responseType: "stream" },
+    );
+    console.log(`>>>> Devolviendo el archivo ${fileMetadata.data.name}`);
+    return response.data as unknown as Readable;
+  } catch (error) {
+    console.error("Error al obtener el archivo de Google Drive:", error);
+    throw error;
+  }
+}
