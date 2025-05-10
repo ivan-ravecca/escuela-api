@@ -35,7 +35,7 @@ router.get("/generate", async (req: Request, res: Response): Promise<void> => {
     // Crear un hash del ID del archivo
     const diplomaId: string | null = createHash(fileId as string);
     if (diplomaId === null) {
-      console.error("Error al crear el hash");
+      //console.error("Error al crear el hash");
       res.status(500).send("Error al crear el hash");
       return;
     }
@@ -50,7 +50,7 @@ router.get("/generate", async (req: Request, res: Response): Promise<void> => {
     res.setHeader("Content-Type", "image/png");
     res.send(qrImage);
   } catch (error) {
-    console.error("Error al generar el código QR:", error);
+    //console.error("Error al generar el código QR:", error);
     res.status(500).send("Error al procesar la solicitud");
   }
 });
@@ -60,13 +60,13 @@ router.get(
   "/:diplomaId",
   async (req: Request, res: Response): Promise<void> => {
     const diplomaId: string = req.params.diplomaId;
-    console.log(`ID del diploma: ${diplomaId}`);
+    //console.log(`ID del diploma: ${diplomaId}`);
     try {
       // Verificar y decodificar el hash para obtener el ID del archivo
       const fileId: string | null = verifyHash(diplomaId);
 
       if (!fileId) {
-        console.log(`diploma Invalid: ${diplomaId}`);
+        //console.log(`diploma Invalid: ${diplomaId}`);
         res.status(400).send("ID de diploma inválido");
         return;
       }
@@ -94,18 +94,18 @@ router.get(
       // Enviar el archivo como respuesta
       file.stream.pipe(res);
     } catch (error) {
-      console.error("1 - Error al obtener el archivo:", error);
+      //console.error("1 - Error al obtener el archivo:", error);
       // Check if authentication is required
       if (error instanceof AuthenticationRequiredError) {
         // Store the diploma ID in the session or as a URL parameter
         const returnUrl = `/diploma/${diplomaId}`;
         const encodedReturnUrl = encodeURIComponent(returnUrl);
-        console.error("2 - Guardo el redirect URL", encodedReturnUrl);
+        //console.error("2 - Guardo el redirect URL", encodedReturnUrl);
 
         // Redirect to Google authentication with return URL
         res.redirect(`/auth/google?returnUrl=${encodedReturnUrl}`);
       } else {
-        console.error("Error al visualizar el diploma:", error);
+        //console.error("Error al visualizar el diploma:", error);
         res.status(500).send("Error al procesar la solicitud");
       }
     }

@@ -20,7 +20,7 @@ async function generateQRCode(url: string): Promise<Buffer> {
     const qrBuffer: Buffer = await QRCode.toBuffer(url, options);
     return qrBuffer;
   } catch (error) {
-    console.error("Error al generar el código QR:", error);
+    //console.error("Error al generar el código QR:", error);
     throw error;
   }
 }

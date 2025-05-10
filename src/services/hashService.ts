@@ -20,7 +20,7 @@ function createHash(fileId: string): string | null {
     // Make the encrypted string URL-safe
     return encrypted.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   } catch (error) {
-    console.error("Error al crear el hash reversible:", error);
+    //console.error("Error al crear el hash reversible:", error);
     return null;
   }
 }
@@ -49,7 +49,7 @@ function verifyHash(hash: string): string | null {
 
     return decrypted;
   } catch (error) {
-    console.error("Error al verificar el hash reversible:", error);
+    //console.error("Error al verificar el hash reversible:", error);
     return null;
   }
 }
