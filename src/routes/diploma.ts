@@ -85,6 +85,7 @@ router.get(
 
       // Configurar los encabezados para visualizar el PDF
       res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Access-Control-Expose-Headers", "content-disposition");
       res.setHeader(
         "Content-Disposition",
         `inline; filename="${fileName}"; filename*=UTF-8''${fileName}`,
