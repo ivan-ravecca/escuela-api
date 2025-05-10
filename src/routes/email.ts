@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import dotenv from "dotenv";
+import { EmailMessage } from "../types";
 dotenv.config();
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -7,14 +8,6 @@ const EMAIL_TO = process.env.EMAIL_TO;
 const EMAIL_FROM = process.env.EMAIL_FROM;
 
 const router = Router();
-
-interface EmailMessage {
-  to: string | undefined;
-  from: string | undefined;
-  subject: string;
-  text: string;
-  html: string;
-}
 
 router.post("/send", async (req: Request, res: Response) => {
   const { name, email, message } = req.body;

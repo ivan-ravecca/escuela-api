@@ -1,17 +1,6 @@
 import QRCode from "qrcode";
 import { Buffer } from "buffer";
-
-// Generar un código QR a partir de una URL
-interface QRCodeOptions {
-  errorCorrectionLevel: "L" | "M" | "Q" | "H";
-  type: "png";
-  quality: number;
-  margin: number;
-  color: {
-    dark: string;
-    light: string;
-  };
-}
+import { QRCodeOptions } from "../types";
 
 async function generateQRCode(url: string): Promise<Buffer> {
   try {

@@ -8,8 +8,22 @@ export interface GoogleTokens {
   expiry_date: number;
 }
 
-export interface AuthInterface {
-  router: any;
-  oauth2Client: OAuth2Client;
-  getTokens: () => GoogleTokens | null;
+// Generar un código QR a partir de una URL
+export interface QRCodeOptions {
+  errorCorrectionLevel: "L" | "M" | "Q" | "H";
+  type: "png";
+  quality: number;
+  margin: number;
+  color: {
+    dark: string;
+    light: string;
+  };
+}
+
+export interface EmailMessage {
+  to: string | undefined;
+  from: string | undefined;
+  subject: string;
+  text: string;
+  html: string;
 }
