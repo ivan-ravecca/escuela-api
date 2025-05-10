@@ -1,4 +1,5 @@
 import { OAuth2Client } from "google-auth-library";
+import { Readable } from "stream";
 
 export interface GoogleTokens {
   access_token: string;
@@ -26,4 +27,12 @@ export interface EmailMessage {
   subject: string;
   text: string;
   html: string;
+}
+
+export interface DriveFileResponse {
+  stream: Readable;
+  metadata: {
+    name: string;
+    mimeType: string;
+  };
 }

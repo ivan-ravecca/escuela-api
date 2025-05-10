@@ -1,6 +1,7 @@
 import { google } from "googleapis";
 import { Readable } from "stream";
 import { oauth2Client, getTokens } from "../routes/authRoutes";
+import { DriveFileResponse } from "../types/index";
 
 export class AuthenticationRequiredError extends Error {
   constructor(message: string = "Authentication required") {
@@ -98,7 +99,9 @@ async function getDriveClientJWT(): Promise<any> {
   }
 }
 
-export async function getDriveFileJWT(fileId: string): Promise<Readable> {
+export async function getDriveFileJWT(
+  fileId: string,
+): Promise<DriveFileResponse> {
   console.log(`Obteniendo archivo de Google Drive con ID: ${fileId}`);
   try {
     // Get authenticated client
@@ -125,7 +128,14 @@ export async function getDriveFileJWT(fileId: string): Promise<Readable> {
       { responseType: "stream" },
     );
     console.log(`>>>> Devolviendo el archivo ${fileMetadata.data.name}`);
-    return response.data as unknown as Readable;
+    // Return both the stream and the file metadata
+    return {
+      stream: response.data as Readable,
+      metadata: {
+        name: fileMetadata.data.name,
+        mimeType: fileMetadata.data.mimeType,
+      },
+    };
   } catch (error) {
     console.error("Error al obtener el archivo de Google Drive:", error);
     throw error;

@@ -75,12 +75,23 @@ router.get(
       //const file = await getDriveFile(fileId);
       const file = await getDriveFileJWT(fileId);
 
+      // Get the filename and clean it up if needed
+      let fileName = file.metadata.name;
+      // If filename doesn't end with .pdf, add it
+      if (!fileName.toLowerCase().endsWith(".pdf")) {
+        fileName = encodeURIComponent(fileName.replace(/[^\w\s.-]/g, "_"));
+        fileName = `${fileName}.pdf`;
+      }
+
       // Configurar los encabezados para visualizar el PDF
       res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `inline; filename="diploma.pdf"`);
+      res.setHeader(
+        "Content-Disposition",
+        `inline; filename="${fileName}"; filename*=UTF-8''${fileName}`,
+      );
 
       // Enviar el archivo como respuesta
-      file.pipe(res);
+      file.stream.pipe(res);
     } catch (error) {
       console.error("1 - Error al obtener el archivo:", error);
       // Check if authentication is required
