@@ -41,7 +41,8 @@ router.get("/generate", async (req: Request, res: Response): Promise<void> => {
     }
 
     // Crear la URL completa para el Endpoint 1
-    const diplomaUrl: string = `${process.env.BASE_URL}/diploma/${diplomaId}`;
+    const diplomaUrl: string = `${process.env.SITE_URL}/diploma/${diplomaId}`;
+    //console.log(`URL del diploma: ${diplomaUrl}`);
 
     // Generar el código QR
     const qrImage: Buffer = await generateQRCode(diplomaUrl);
