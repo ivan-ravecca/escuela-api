@@ -36,3 +36,13 @@ export interface DriveFileResponse {
     mimeType: string;
   };
 }
+
+/**
+ * Data interface for PDF template fields
+ */
+export interface CertificateData {
+  studentName?: string;
+  courseName?: string;
+  courseDate?: string;
+  qrImageBase64?: string;
+}
