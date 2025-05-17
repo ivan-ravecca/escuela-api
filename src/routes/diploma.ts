@@ -1,6 +1,5 @@
 import express, { Request, Response, Router } from "express";
 import {
-  getDriveFile,
   getDriveFileJWT,
   extractFileIdFromUrl,
   AuthenticationRequiredError,
@@ -8,6 +7,8 @@ import {
 import { createHash, verifyHash } from "../services/hashService";
 import { generateQRCode } from "../services/qrService";
 import { fillPDFTemplate } from "../services/pdfTemplateService";
+import { authMiddleware } from "../middleware/authMiddleware";
+
 const path = require("path");
 
 const processGenerationOfQR = async (fileId: string): Promise<Buffer> => {
@@ -33,32 +34,36 @@ router.get("/", (req: Request, res: Response) => {
 });
 
 // Endpoint 2: Generar código QR para un link de Google Drive
-router.get("/generate", async (req: Request, res: Response): Promise<void> => {
-  try {
-    const driveUrl: string = req.query.link as string;
+router.get(
+  "/generate",
+  authMiddleware,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const driveUrl: string = req.query.link as string;
 
-    if (!driveUrl) {
-      res.status(400).send("Se requiere un link de Google Drive");
-      return;
+      if (!driveUrl) {
+        res.status(400).send("Se requiere un link de Google Drive");
+        return;
+      }
+      // Extraer el ID del archivo del link de Google Drive
+      const fileId: string | null = extractFileIdFromUrl(driveUrl);
+
+      if (!fileId || typeof fileId !== "string") {
+        res.status(400).send("Link de Google Drive inválido");
+        return;
+      }
+
+      const qrImage: Buffer = await processGenerationOfQR(fileId);
+
+      // Devolver la imagen del código QR
+      res.setHeader("Content-Type", "image/png");
+      res.send(qrImage);
+    } catch (error) {
+      console.error("Error al generar el código QR:", error);
+      res.status(500).send("Error al procesar la solicitud");
     }
-    // Extraer el ID del archivo del link de Google Drive
-    const fileId: string | null = extractFileIdFromUrl(driveUrl);
-
-    if (!fileId || typeof fileId !== "string") {
-      res.status(400).send("Link de Google Drive inválido");
-      return;
-    }
-
-    const qrImage: Buffer = await processGenerationOfQR(fileId);
-
-    // Devolver la imagen del código QR
-    res.setHeader("Content-Type", "image/png");
-    res.send(qrImage);
-  } catch (error) {
-    console.error("Error al generar el código QR:", error);
-    res.status(500).send("Error al procesar la solicitud");
-  }
-});
+  },
+);
 
 // Endpoint 1: Visualizar el PDF usando el hash
 router.get(
@@ -117,7 +122,7 @@ router.get(
   },
 );
 
-router.post("/certificate", async (req, res) => {
+router.post("/certificate", authMiddleware, async (req, res) => {
   const { studentName, courseName, courseDate, driveUrl } = req.body;
   const templatePath = path.resolve(
     __dirname,
@@ -126,18 +131,6 @@ router.post("/certificate", async (req, res) => {
   console.log(
     `studentName: ${studentName}, courseName: ${courseName}, courseDate: ${courseDate}, driveUrl: ${driveUrl}`,
   );
-  // try {
-  //   const pdfPath = await fillPDFTemplate(templatePath, {
-  //     studentName,
-  //     courseName,
-  //     courseDate,
-  //   });
-
-  //   res.download(pdfPath, `certificado-${studentName || "sin-nombre"}.pdf`);
-  // } catch (error: any) {
-  //   console.error(`Error al llenar el PDF: ${error.message}`, error);
-  //   res.status(500).send(`Error: ${error.message}`);
-  // }
   try {
     if (!driveUrl) {
       res.status(400).send("Se requiere un link de Google Drive");
