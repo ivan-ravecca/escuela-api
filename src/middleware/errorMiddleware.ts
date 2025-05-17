@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import config from "../config";
 
 interface AppError extends Error {
   statusCode?: number;
@@ -17,6 +18,6 @@ export const errorHandler = (
   res.status(statusCode).json({
     status: "error",
     message: err.message || "Error interno del servidor",
-    stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    stack: config.server.nodeEnv === "development" ? err.stack : undefined,
   });
 };

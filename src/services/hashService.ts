@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import config from "../config";
 
 /**
  * Creates a secure hash for the file ID using HMAC
@@ -10,7 +11,7 @@ function createHash(fileId: string): string | null {
     // Encrypt the fileId using AES for reversibility
     const cipher = crypto.createCipheriv(
       "aes-256-cbc",
-      crypto.scryptSync(process.env.HASH_SECRET || "", "salt", 32),
+      crypto.scryptSync(config.crypto.hashSecret || "", "salt", 32),
       Buffer.alloc(16, 0), // Initialization vector (IV) set to 16 bytes of zeros
     );
 
@@ -40,7 +41,7 @@ function verifyHash(hash: string): string | null {
     // Decrypt the hash using AES to retrieve the original fileId
     const decipher = crypto.createDecipheriv(
       "aes-256-cbc",
-      crypto.scryptSync(process.env.HASH_SECRET || "", "salt", 32),
+      crypto.scryptSync(config.crypto.hashSecret || "", "salt", 32),
       Buffer.alloc(16, 0), // Initialization vector (IV) set to 16 bytes of zeros
     );
 

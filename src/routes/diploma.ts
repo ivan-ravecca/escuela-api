@@ -8,6 +8,7 @@ import { createHash, verifyHash } from "../services/hashService";
 import { generateQRCode } from "../services/qrService";
 import { fillPDFTemplate } from "../services/pdfTemplateService";
 import { authMiddleware } from "../middleware/authMiddleware";
+import config from "../config";
 
 const path = require("path");
 
@@ -20,7 +21,7 @@ const processGenerationOfQR = async (fileId: string): Promise<Buffer> => {
   }
 
   // Crear la URL completa para el Endpoint 1
-  const diplomaUrl: string = `${process.env.SITE_URL}/diploma/${diplomaId}`;
+  const diplomaUrl: string = `${config.cors.siteUrl}/diploma/${diplomaId}`;
   console.log(`URL del diploma: ${diplomaUrl}`);
 
   // Generar el código QR

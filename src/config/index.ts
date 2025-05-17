@@ -19,6 +19,14 @@ const config = {
     siteUrl: process.env.SITE_URL,
     baseUrl: process.env.BASE_URL,
   },
+  sendGrid: {
+    apiKey: process.env.SENDGRID_API_KEY,
+    emailTo: process.env.EMAIL_TO,
+    emailFrom: process.env.EMAIL_FROM,
+  },
+  crypto: {
+    hashSecret: process.env.HASH_SECRET,
+  },
 };
 
 export default config;

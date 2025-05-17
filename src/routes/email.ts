@@ -1,11 +1,11 @@
 import { Router, Request, Response } from "express";
-import dotenv from "dotenv";
 import { EmailMessage } from "../types";
-dotenv.config();
+import config from "../config";
+
 const sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-const EMAIL_TO = process.env.EMAIL_TO;
-const EMAIL_FROM = process.env.EMAIL_FROM;
+sgMail.setApiKey(config.sendGrid.apiKey);
+const EMAIL_TO = config.sendGrid.emailTo;
+const EMAIL_FROM = config.sendGrid.emailFrom;
 
 const router = Router();
 

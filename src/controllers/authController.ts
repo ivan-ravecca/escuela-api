@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as authService from "../services/authService";
+import config from "../config";
 
 /**
  * Inicia sesión con token de Google
@@ -69,7 +70,7 @@ export const verifyToken = (req: Request, res: Response) => {
     const userInfo = authService.verifyToken(token);
 
     // Verificar que el usuario pertenece al dominio permitido
-    if (!userInfo.email.endsWith(`@${process.env.ALLOWED_DOMAIN}`)) {
+    if (!userInfo.email.endsWith(`@${config.google.allowedDomain}`)) {
       res.status(403).json({
         valid: false,
         message: "Dominio de correo no autorizado",
