@@ -40,8 +40,6 @@ app.options("*", cors(corsOptions));
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
-// Manejo de errores
-app.use(errorHandler);
 
 app.use("/auth", authRoutes);
 app.use("/email", emailRoutes);

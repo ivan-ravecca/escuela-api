@@ -161,7 +161,7 @@ This API uses JWT (JSON Web Tokens) for authentication. To access protected endp
 Authorization: Bearer <your_token>
 ```
 
-- `POST /api/auth/login` - Login with Google token
+- `POST /auth/login` - Login with Google token
 - `POST /api/auth/verify` - Verify JWT token validity
 - `GET /api/auth/me` - Get current user information (requires authentication)
 
