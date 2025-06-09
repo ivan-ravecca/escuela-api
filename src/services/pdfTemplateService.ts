@@ -75,8 +75,8 @@ async function fillPDFTemplate(
       // Define QR code size and position (adjust as needed)
       const qrSize = 100;
       //const qrX = width - qrSize - 50;
-      const qrX = 710;
-      const qrY = 120;
+      const qrX = 380;
+      const qrY = 20;
 
       // Draw the QR code on the page
       firstPage.drawImage(qrImage, {
