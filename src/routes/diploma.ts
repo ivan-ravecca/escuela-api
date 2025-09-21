@@ -133,7 +133,7 @@ router.post("/certificate", authMiddleware, async (req, res) => {
     __dirname,
     "../../src/templates/certificate_MEC.pdf",
   );
-  let qrImageBase64;
+  let qrImageBase64: string | undefined;
   // console.log(
   //   `studentName: ${studentName}, courseName: ${courseName}, courseDate: ${courseDate}, certMec: ${certMec ? "SI" : "NO"}, driveUrl: ${driveUrl}`,
   // );
@@ -161,13 +161,8 @@ router.post("/certificate", authMiddleware, async (req, res) => {
       studentName,
       courseName,
       courseDate,
+      ...(qrImageBase64 && { qrImageBase64 }),
     };
-
-    // Only add qrImageBase64 if it exists (for non-MEC certificates)
-    if (qrImageBase64) {
-      Object.assign(formData, { qrImageBase64 });
-    }
-
     const pdfBuffer = await fillPDFTemplate(
       certMec ? templateMECPath : templatePath,
       formData,
