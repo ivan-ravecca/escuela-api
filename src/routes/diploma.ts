@@ -124,39 +124,54 @@ router.get(
 );
 
 router.post("/certificate", authMiddleware, async (req, res) => {
-  const { studentName, courseName, courseDate, driveUrl } = req.body;
+  const { studentName, courseName, courseDate, certMec, driveUrl } = req.body;
   const templatePath = path.resolve(
     __dirname,
     "../../src/templates/certificate.pdf",
   );
-  console.log(
-    `studentName: ${studentName}, courseName: ${courseName}, courseDate: ${courseDate}, driveUrl: ${driveUrl}`,
+  const templateMECPath = path.resolve(
+    __dirname,
+    "../../src/templates/certificate_MEC.pdf",
   );
+  let qrImageBase64;
+  // console.log(
+  //   `studentName: ${studentName}, courseName: ${courseName}, courseDate: ${courseDate}, certMec: ${certMec ? "SI" : "NO"}, driveUrl: ${driveUrl}`,
+  // );
   try {
-    if (!driveUrl) {
-      res.status(400).send("Se requiere un link de Google Drive");
-      return;
+    if (!certMec) {
+      if (!driveUrl) {
+        res.status(400).send("Se requiere un link de Google Drive");
+        return;
+      }
+      // Extraer el ID del archivo del link de Google Drive
+      const fileId: string | null = extractFileIdFromUrl(driveUrl);
+
+      if (!fileId || typeof fileId !== "string") {
+        res.status(400).send("Link de Google Drive inválido");
+        return;
+      }
+
+      const qrImage: Buffer = await processGenerationOfQR(fileId);
+
+      // Convert the QR buffer to base64 string for the template
+      qrImageBase64 = qrImage.toString("base64");
     }
-    // Extraer el ID del archivo del link de Google Drive
-    const fileId: string | null = extractFileIdFromUrl(driveUrl);
-
-    if (!fileId || typeof fileId !== "string") {
-      res.status(400).send("Link de Google Drive inválido");
-      return;
-    }
-
-    const qrImage: Buffer = await processGenerationOfQR(fileId);
-
-    // Convert the QR buffer to base64 string for the template
-    const qrImageBase64 = qrImage.toString("base64");
-
     // Get PDF buffer instead of file path
-    const pdfBuffer = await fillPDFTemplate(templatePath, {
+    const formData = {
       studentName,
       courseName,
       courseDate,
-      qrImageBase64: qrImageBase64,
-    });
+    };
+
+    // Only add qrImageBase64 if it exists (for non-MEC certificates)
+    if (qrImageBase64) {
+      Object.assign(formData, { qrImageBase64 });
+    }
+
+    const pdfBuffer = await fillPDFTemplate(
+      certMec ? templateMECPath : templatePath,
+      formData,
+    );
 
     // Set headers for PDF download
     res.setHeader("Content-Type", "application/pdf");
