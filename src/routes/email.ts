@@ -1,11 +1,11 @@
 import { Router, Request, Response } from "express";
 import { EmailMessage } from "../types";
 import config from "../config";
+import { Resend } from "resend";
 
-const sgMail = require("@sendgrid/mail");
-sgMail.setApiKey(config.sendGrid.apiKey);
-const EMAIL_TO = config.sendGrid.emailTo;
-const EMAIL_FROM = config.sendGrid.emailFrom;
+const resend = new Resend(config.resend.apiKey);
+const EMAIL_TO = config.resend.emailTo || "";
+const EMAIL_FROM = config.resend.emailFrom || "";
 
 const router = Router();
 
@@ -25,7 +25,7 @@ router.post("/send", async (req: Request, res: Response) => {
          <li><strong>Email:</strong> ${email}</li>
          <li><strong>Mensaje:</strong> ${message}</li></ul>`,
   };
-  sgMail
+  resend.emails
     .send(msg as EmailMessage)
     .then((): void => {
       res.status(202).send();
@@ -72,7 +72,7 @@ router.post("/inquire", async (req: Request, res: Response) => {
          <li><strong>Documento:</strong> ${ci}</li>
          <li><strong>${graduation}</strong></li></ul>`,
     };
-    sgMail
+    resend.emails
       .send(msg as EmailMessage)
       .then((): void => {
         res.status(202).send();

@@ -21,7 +21,8 @@
     "jsonwebtoken": "^9.0.2",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^5.1.91",
-    "qrcode": "^1.5.3"
+    "qrcode": "^1.5.3",
+    "resend": "^6.1.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
