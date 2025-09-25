@@ -19,8 +19,8 @@ const config = {
     siteUrl: process.env.SITE_URL,
     baseUrl: process.env.BASE_URL,
   },
-  sendGrid: {
-    apiKey: process.env.SENDGRID_API_KEY,
+  resend: {
+    apiKey: process.env.RESEND_API_KEY,
     emailTo: process.env.EMAIL_TO,
     emailFrom: process.env.EMAIL_FROM,
   },

@@ -21,12 +21,16 @@ export interface QRCodeOptions {
   };
 }
 
+// Interface matching Resend's CreateEmailOptions type
 export interface EmailMessage {
-  to: string | undefined;
-  from: string | undefined;
+  to: string | string[];
+  from: string;
   subject: string;
-  text: string;
-  html: string;
+  text: string; // Make text required as Resend needs it
+  html?: string;
+  reply_to?: string;
+  cc?: string | string[];
+  bcc?: string | string[];
 }
 
 export interface DriveFileResponse {
