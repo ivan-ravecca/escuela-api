@@ -1,25 +1,42 @@
 # Escuela API
 
-This project is a comprehensive API for managing certificates and diplomas for an educational institution. It provides authenticated endpoints for generating QR codes, creating certificates, and managing educational resources.
+API integral para una institución educativa de enfermería que incluye:
+- 🎓 Gestión de certificados y diplomas
+- 🤖 **Asistente de IA para orientación académica** (NUEVO)
+- 📧 Envío de emails y notificaciones
+- 📚 Catálogo de cursos y programas
+- 🔐 Autenticación y autorización
 
-## Table of Contents
+## ✨ Nuevo: Asistente de IA
+
+Sistema completo de asistente conversacional que ayuda a potenciales estudiantes a encontrar el curso ideal:
+
+- **Claude 3.5 Haiku** - IA conversacional en español
+- **Recomendaciones personalizadas** basadas en perfil del usuario
+- **Captura de leads** con integración a email
+- **Rate limiting** para prevenir abuso
+- **Base de datos** con catálogo de cursos
+
+📖 **Ver documentación completa:**
+- [ASSISTANT_README.md](./ASSISTANT_README.md) - Guía técnica detallada
+- [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) - Resumen ejecutivo
+- [FRONTEND_PROMPTS.md](./FRONTEND_PROMPTS.md) - Para implementar el widget
+- [CHECKLIST.md](./CHECKLIST.md) - Lista de verificación
+
+## 📑 Table of Contents
 
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Required API Keys](#required-api-keys)
-    - [Google OAuth](#google-oauth)
-    - [SendGrid](#sendgrid)
-    - [Google Drive API](#google-drive-api)
 - [Environment Variables](#environment-variables)
 - [Usage](#usage)
 - [API Endpoints](#api-endpoints)
+  - [AI Assistant (NEW)](#ai-assistant-new)
+  - [Courses Catalog (NEW)](#courses-catalog-new)
   - [Authentication](#authentication)
   - [Diplomas/Certificates](#diplomascertificates)
   - [Email](#email)
-  - [Usage Examples](#usage-examples)
-    - [Generating a Certificate](#generating-a-certificate)
-    - [Generating a QR Code](#generating-a-qr-code)
 - [Dependencies](#dependencies)
 - [Deployment](#deployment)
 
@@ -57,28 +74,51 @@ This project is a comprehensive API for managing certificates and diplomas for a
 
 ```
 escuela-api
-├── Keys
-│   ├── service-account-key.json   # Service account credentials
-├── src
-│   ├── app.ts                     # Entry point of the application
-│   ├── controllers                # Business logic controllers
-│   │   └── authController.ts      # Authentication controller
-│   ├── middleware                 # Express middlewares
-│   │   ├── authMiddleware.ts      # JWT authentication middle
-│   │   └── errorMiddleware.ts     # Error middleware
-│   ├── routes                     # API routes
-│   │   ├── authRoutes.ts          # Authentication routes
-│   │   ├── diploma.ts             # Certificate/diploma routes
-│   │   └── email.ts               # Email sending routes
-│   ├── services                   # Business services (list of)
-│   │── templates                  # PDF templates for certificates
-│   │   └── certificate.pdf        # Certificate template with form fields
-│   └── types                      # List of interfaces
-├── package.json                   # NPM configuration file
-├── tsconfig.json                  # TypeScript configuration file
-├── .prettierrc                    # Prettier
-├── .env                           # Env file
-└── README.md                      # Project documentation
+├── keys/
+│   └── service-account-key.json      # Service account credentials
+├── data/
+│   └── courses.db                    # SQLite database (NEW)
+├── src/
+│   ├── app.ts                        # Entry point of the application
+│   ├── config/
+│   │   └── index.ts                  # Configuration (including Anthropic)
+│   ├── controllers/
+│   │   ├── authController.ts         # Authentication controller
+│   │   └── assistantController.ts    # AI Assistant controller (NEW)
+│   ├── database/
+│   │   └── courseRepository.ts       # Course CRUD operations (NEW)
+│   ├── middleware/
+│   │   ├── authMiddleware.ts         # JWT authentication middleware
+│   │   └── errorMiddleware.ts        # Error middleware
+│   ├── routes/
+│   │   ├── authRoutes.ts             # Authentication routes
+│   │   ├── diploma.ts                # Certificate/diploma routes
+│   │   ├── email.ts                  # Email sending routes
+│   │   ├── assistantRoutes.ts        # AI Assistant routes (NEW)
+│   │   └── courseRoutes.ts           # Course CRUD routes (NEW)
+│   ├── services/
+│   │   ├── assistantService.ts       # Claude AI integration (NEW)
+│   │   ├── authService.ts            # Authentication service
+│   │   ├── driveService.ts           # Google Drive service
+│   │   └── ...                       # Other services
+│   ├── scripts/
+│   │   └── seedCourses.ts            # Database seeder (NEW)
+│   ├── templates/                    # PDF templates for certificates
+│   │   └── certificate.pdf           # Certificate template
+│   └── types/
+│       ├── index.ts                  # General interfaces
+│       └── course.ts                 # Course-related types (NEW)
+├── package.json                      # NPM configuration
+├── tsconfig.json                     # TypeScript configuration
+├── .env                              # Environment variables
+├── .env.example                      # Environment variables template (NEW)
+├── test-assistant.js                 # API testing script (NEW)
+├── README.md                         # Main documentation
+├── ASSISTANT_README.md               # AI Assistant docs (NEW)
+├── DEPLOYMENT.md                     # Deployment guide (NEW)
+├── FRONTEND_PROMPTS.md               # Frontend integration (NEW)
+├── IMPLEMENTATION_SUMMARY.md         # Implementation summary (NEW)
+└── CHECKLIST.md                      # Setup checklist (NEW)
 ```
 
 ## Environment Variables
@@ -104,21 +144,57 @@ Create a `.env` file in the root directory and add the following variables:
 | # URLs                 |                                             |                             |
 | `BASE_URL`             | Base URL for API                            | `http://localhost:3000`     |
 | `FRONTEND_URL`         | URL for the frontend application            | `http://localhost:3001`     |
+| # AI Assistant (NEW)   |                                             |                             |
+| `ANTHROPIC_API_KEY`    | API key for Claude (Anthropic)              | `sk-ant-api03-xxxxx`        |
+| `ANTHROPIC_MODEL`      | Claude model to use                         | `claude-3-5-haiku-20241022` |
+| `ANTHROPIC_MAX_TOKENS` | Max tokens for AI responses                 | `2048`                      |
+| # Resend (already exists) | For email notifications                  |                             |
+| `RESEND_API_KEY`       | API key for Resend email service            | `re_xxxxx`                  |
+| `EMAIL_TO`             | Email to receive notifications              | `contacto@escuelaenfermeria.com.uy` |
+| `EMAIL_FROM`           | Email to send from                          | `noreply@escuelaenfermeria.com.uy`  |
 
 ## Usage
 
 After starting the server, you can access the API at `http://localhost:3000` (or whatever port you've configured).
 
-Run the server
+### Quick Start
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Configure .env file (copy from .env.example)
+cp .env.example .env
+# Edit .env and add your API keys
+
+# 3. Build the project
+npm run build
+
+# 4. Initialize database with sample courses
+npm run seed
+
+# 5. Start the server
 npm start
+# or for development with auto-reload:
+npm run dev
 ```
 
-For development with auto-reload:
+### Available Scripts
+
+- `npm start` - Run the production server
+- `npm run dev` - Run development server with auto-reload
+- `npm run build` - Compile TypeScript to JavaScript
+- `npm run seed` - Seed database with sample courses
+- `npm run seed:dev` - Seed database in development mode
+- `npm run mcp` - Run MCP server for course catalog
+
+### Testing the AI Assistant
 
 ```bash
-npm run dev
+# Run automated tests
+node test-assistant.js http://localhost:3000
+
+# Or test manually with curl (see examples in API Endpoints section)
 ```
 
 ## Required API Keys
@@ -152,6 +228,71 @@ For accessing Google Drive files:
 4. Copy the API key to your ⚙️ `.env` file
 
 ## API Endpoints
+
+### AI Assistant (NEW)
+
+🤖 **Asistente conversacional para orientación académica**
+
+- `GET /assistant/welcome` - Obtener mensaje de bienvenida inicial
+- `POST /assistant/chat` - Enviar mensaje al asistente y recibir respuesta
+  - Rate limit: 10 requests/minuto
+  - Body: `{ message: string, conversation_history?: Array<{role, content}> }`
+  - Response: `{ response: string, recommended_courses?: Course[] }`
+- `POST /assistant/interest` - Capturar lead cuando usuario hace click en "Me interesa"
+  - Rate limit: 3 requests/hora
+  - Body: `{ name: string, phone: string, email?: string, course_id: number, course_name: string }`
+  - Se activa desde el botón "Me interesa" en cada tarjeta de curso
+
+**Ejemplo de uso:**
+```bash
+# 1. Obtener bienvenida
+curl https://api.escuelaenfermeria.com.uy/assistant/welcome
+
+# 2. Chatear con el asistente
+curl -X POST https://api.escuelaenfermeria.com.uy/assistant/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message":"Hola, tengo 25 años y quiero estudiar enfermería"}'
+
+# 3. Usuario hace click en "Me interesa" y envía sus datos
+curl -X POST https://api.escuelaenfermeria.com.uy/assistant/interest \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Juan Pérez","phone":"+598 99 123 456","email":"juan@example.com","course_id":1,"course_name":"Auxiliar de Enfermería"}'
+```
+
+📖 Ver [ASSISTANT_README.md](./ASSISTANT_README.md) para documentación completa.
+
+### Courses Catalog (NEW)
+
+📚 **API de gestión de catálogo de cursos**
+
+- `GET /courses` - Listar todos los cursos
+- `GET /courses/:id` - Obtener curso por ID
+- `GET /courses/search/:query` - Buscar cursos por keyword
+- `GET /courses/category/:category` - Filtrar por categoría (inicial/avanzado/especializacion)
+- `GET /courses/modality/:modality` - Filtrar por modalidad (presencial/virtual/semipresencial)
+- `POST /courses` - Crear nuevo curso (⚠️ proteger con auth en producción)
+- `PUT /courses/:id` - Actualizar curso (⚠️ proteger con auth en producción)
+- `DELETE /courses/:id` - Eliminar curso (⚠️ proteger con auth en producción)
+
+**Ejemplo de respuesta:**
+```json
+{
+  "courses": [
+    {
+      "id": 1,
+      "name": "Auxiliar de Enfermería",
+      "url": "https://escuelaenfermeria.com.uy/cursos/auxiliar-enfermeria",
+      "description": "Formación básica en enfermería...",
+      "duration_hours": 400,
+      "modality": "presencial",
+      "category": "inicial",
+      "requirements": "Primaria completa, edad mínima 18 años",
+      "job_opportunities": "Hospitales públicos y privados..."
+    }
+  ],
+  "total": 7
+}
+```
 
 ### Authentication
 
@@ -217,18 +358,119 @@ fetch(
 
 ## Dependencies
 
-- express: Web application framework
-- pdf-lib: PDF generation and form filling
-- qrcode: QR code generation
-- jsonwebtoken: JWT authentication
-- @sendgrid/mail: Email sending
-- google-auth-library: Google authentication
-- googleapis: Google API access
+### Core
+- **express** - Web application framework
+- **typescript** - Type safety and modern JavaScript features
+- **helmet** - Security headers
+- **cors** - Cross-origin resource sharing
+
+### Authentication & Security
+- **jsonwebtoken** - JWT authentication
+- **google-auth-library** - Google OAuth
+- **express-rate-limit** - Rate limiting (NEW)
+
+### AI & Data
+- **@anthropic-ai/sdk** - Claude AI integration (NEW)
+- **@modelcontextprotocol/sdk** - MCP for course catalog (NEW)
+- **better-sqlite3** - SQLite database (NEW)
+
+### Email & Notifications
+- **resend** - Modern email API
+- **@sendgrid/mail** - SendGrid email (legacy)
+
+### Documents & Media
+- **pdf-lib** - PDF generation and manipulation
+- **qrcode** - QR code generation
+- **googleapis** - Google Drive API
+
+### Development
+- **ts-node-dev** - Development server with auto-reload
+- **prettier** - Code formatting
+- **eslint** - Code linting
 
 ## Deployment
 
-Instructions for deploying to production environments:
+Guía completa de deployment en [DEPLOYMENT.md](./DEPLOYMENT.md)
 
-1. Set all required environment variables
-2. Build the project: `npm run build`
-3. Start the production server: `npm run start:prod`
+### Quick Deploy
+
+1. **Configure environment variables:**
+   ```bash
+   # Required for AI Assistant
+   ANTHROPIC_API_KEY=sk-ant-api03-xxxxx
+   RESEND_API_KEY=re_xxxxx
+   EMAIL_TO=contacto@escuelaenfermeria.com.uy
+   EMAIL_FROM=noreply@escuelaenfermeria.com.uy
+   ```
+
+2. **Build and initialize:**
+   ```bash
+   npm install
+   npm run build
+   npm run seed
+   ```
+
+3. **Start production server:**
+   ```bash
+   npm start
+   # or with PM2:
+   pm2 start dist/app.js --name escuela-api
+   ```
+
+4. **Configure reverse proxy (Nginx):**
+   ```nginx
+   server {
+       listen 80;
+       server_name api.escuelaenfermeria.com.uy;
+       location / {
+           proxy_pass http://localhost:3000;
+       }
+   }
+   ```
+
+5. **Setup SSL with Let's Encrypt:**
+   ```bash
+   sudo certbot --nginx -d api.escuelaenfermeria.com.uy
+   ```
+
+### Platform-Specific Deploy
+
+- **Railway/Render**: Conecta el repo Git y configura las env vars
+- **Heroku**: Ver [DEPLOYMENT.md](./DEPLOYMENT.md#deploy-en-heroku)
+- **VPS**: Ver [DEPLOYMENT.md](./DEPLOYMENT.md#deploy-en-vps-ubuntu)
+
+## 📚 Additional Documentation
+
+- [ASSISTANT_README.md](./ASSISTANT_README.md) - Guía completa del asistente de IA
+- [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) - Resumen de implementación
+- [FRONTEND_PROMPTS.md](./FRONTEND_PROMPTS.md) - Integración con React frontend
+- [DEPLOYMENT.md](./DEPLOYMENT.md) - Guía detallada de deployment
+- [CHECKLIST.md](./CHECKLIST.md) - Lista de verificación pre-deployment
+
+## 📊 Cost Estimation
+
+**Claude 3.5 Haiku:**
+- ~$0.003 por conversación
+- 1000 conversaciones/mes: ~$3 USD
+- 10,000 conversaciones/mes: ~$30 USD
+
+**Otros servicios:**
+- Resend: Free tier hasta 3000 emails/mes
+- Hosting: Variable según proveedor
+
+## 🔒 Security
+
+- ✅ CORS configurado
+- ✅ Helmet para security headers
+- ✅ Rate limiting activo
+- ✅ JWT authentication
+- ✅ Environment variables protegidas
+- ⚠️ CRUD endpoints requieren auth en producción
+
+## 🤝 Contributing
+
+1. Fork el proyecto
+2. Crea una feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la branch (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request

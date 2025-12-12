@@ -1,0 +1,124 @@
+import { Request, Response } from "express";
+import { AssistantService } from "../services/assistantService";
+import { ChatRequest, LeadCaptureRequest } from "../types/course";
+import { Resend } from "resend";
+import config from "../config";
+
+const assistantService = new AssistantService();
+const resend = new Resend(config.resend.apiKey);
+
+export class AssistantController {
+  static async chat(req: Request, res: Response): Promise<void> {
+    try {
+      const { message, conversation_history = [] } = req.body as ChatRequest;
+
+      if (!message || message.trim() === "") {
+        res.status(400).json({ error: "Un mensaje es requerido" });
+        return;
+      }
+
+      if (conversation_history.length > 20) {
+        res.status(400).json({
+          error: "La conversación es demasiado larga. Por favor, inicia una nueva conversación.",
+        });
+        return;
+      }
+
+      const result = await assistantService.chat(message, conversation_history);
+
+      res.status(200).json({
+        response: result.response,
+        recommended_courses: result.recommendedCourses,
+      });
+    } catch (error) {
+      console.error("Error in chat controller:", error);
+      res.status(500).json({
+        error: "Error al procesar el mensaje de chat",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+
+  static async welcome(req: Request, res: Response): Promise<void> {
+    try {
+      const welcomeMessage = await assistantService.generateWelcomeMessage();
+      res.status(200).json({ message: welcomeMessage });
+    } catch (error) {
+      console.error("Error generating welcome message:", error);
+      res.status(500).json({ error: "Error al generar el mensaje de bienvenida" });
+    }
+  }
+
+  static async captureInterest(req: Request, res: Response): Promise<void> {
+    try {
+      const { name, phone, email, course_id, course_name } =
+        req.body as LeadCaptureRequest;
+
+      if (!name || !phone || !course_id || !course_name) {
+        res.status(400).json({
+          error: "El nombre, teléfono, y datos del curso son obligatorios",
+          missing_fields: {
+            name: !name ? "El nombre es obligatorio" : undefined,
+            phone: !phone ? "El teléfono es obligatorio" : undefined,
+            course_id: !course_id ? "El ID del curso es obligatorio" : undefined,
+            course_name: !course_name ? "El nombre del curso es obligatorio" : undefined,
+          },
+        });
+        return;
+      }
+
+      // Validate phone format (basic validation)
+      const phoneRegex = /^[0-9\s\-\+\(\)]+$/;
+      if (!phoneRegex.test(phone)) {
+        res.status(400).json({ error: "Formato de número de teléfono inválido" });
+        return;
+      }
+
+      // Send email notification
+      const emailContent = {
+        to: config.resend.emailTo || "",
+        from: config.resend.emailFrom || "",
+        subject: `Nuevo interesado - ${course_name} - ${name}`,
+        text: `Nuevo contacto desde el asistente de IA:
+        
+Nombre: ${name}
+Teléfono: ${phone}
+Email: ${email || "No proporcionado"}
+
+Curso de interés:
+  - ${course_name} (ID: ${course_id})
+
+Este lead fue generado cuando el usuario hizo click en "Me interesa" desde el asistente de orientación académica.`,
+        html: `
+<h2>Nuevo contacto desde el asistente de IA</h2>
+
+<ul>
+  <li><strong>Nombre:</strong> ${name}</li>
+  <li><strong>Teléfono:</strong> ${phone}</li>
+  <li><strong>Email:</strong> ${email || "No proporcionado"}</li>
+</ul>
+
+<h3>Curso de interés:</h3>
+<ul>
+  <li><strong>${course_name}</strong> (ID: ${course_id})</li>
+</ul>
+
+<p><em>Este lead fue generado cuando el usuario hizo click en "Me interesa" desde el asistente de orientación académica.</em></p>
+        `,
+      };
+
+      await resend.emails.send(emailContent);
+
+      res.status(200).json({
+        message: "¡Gracias por tu interés! Nos pondremos en contacto contigo pronto.",
+        success: true,
+      });
+    } catch (error) {
+      console.error("Error capturing interest:", error);
+      res.status(500).json({
+        error: "Failed to process interest capture",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+}
