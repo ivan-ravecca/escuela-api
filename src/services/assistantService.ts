@@ -151,8 +151,14 @@ export class AssistantService {
         response: assistantResponse,
         recommendedCourses,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error calling Claude API:", error);
+      
+      // Check if it's an Anthropic API error with status code 529 (overloaded)
+      if (error?.status === 529 || error?.response?.status === 529) {
+        throw new Error("AI_OVERLOADED");
+      }
+      
       throw new Error("Failed to generate response from assistant");
     }
   }

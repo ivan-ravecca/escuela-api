@@ -6,12 +6,12 @@ services:
     container_name: escuela-mariadb
     restart: unless-stopped
     ports:
-      - "3307:3306"
+      - "${DB_PORT:-3307}:3306"
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword123
-      MYSQL_DATABASE: escuela
-      MYSQL_USER: {USER}
-      MYSQL_PASSWORD: {PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mariadb_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql

@@ -26,6 +26,7 @@ const config = {
   },
   crypto: {
     hashSecret: process.env.HASH_SECRET,
+    csrfSecret: process.env.CSRF_SECRET || "change-this-csrf-secret-in-production",
   },
   anthropic: {
     apiKey: process.env.ANTHROPIC_API_KEY || "",

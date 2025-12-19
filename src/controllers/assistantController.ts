@@ -3,6 +3,7 @@ import { AssistantService } from "../services/assistantService";
 import { ChatRequest, LeadCaptureRequest } from "../types/course";
 import { Resend } from "resend";
 import config from "../config";
+import sanitizeHtml from "sanitize-html";
 
 const assistantService = new AssistantService();
 const resend = new Resend(config.resend.apiKey);
@@ -17,9 +18,41 @@ export class AssistantController {
         return;
       }
 
+      // Validate message length (max 2000 characters)
+      if (message.length > 2000) {
+        res.status(400).json({
+          error: "El mensaje es demasiado largo. Máximo 2000 caracteres.",
+        });
+        return;
+      }
+
+      // Validate conversation history length
       if (conversation_history.length > 20) {
         res.status(400).json({
           error: "La conversación es demasiado larga. Por favor, inicia una nueva conversación.",
+        });
+        return;
+      }
+
+      // Validate individual messages in history (max 2000 chars each)
+      const hasOversizedMessage = conversation_history.some(
+        (msg) => msg.content.length > 2000
+      );
+      if (hasOversizedMessage) {
+        res.status(400).json({
+          error: "Uno o más mensajes en el historial son demasiado largos.",
+        });
+        return;
+      }
+
+      // Validate total conversation size (max 40KB)
+      const totalSize = conversation_history.reduce(
+        (acc, msg) => acc + msg.content.length,
+        message.length
+      );
+      if (totalSize > 40000) {
+        res.status(400).json({
+          error: "La conversación total es demasiado grande. Por favor, inicia una nueva conversación.",
         });
         return;
       }
@@ -32,6 +65,16 @@ export class AssistantController {
       });
     } catch (error) {
       console.error("Error in chat controller:", error);
+      
+      // Handle AI overload error (529)
+      if (error instanceof Error && error.message === "AI_OVERLOADED") {
+        res.status(503).json({
+          error: "Nuestro asistente de IA está experimentando mucha demanda en este momento. Por favor, intentá de nuevo en unos minutos. Gracias por tu paciencia. 🙏",
+          code: "AI_OVERLOADED"
+        });
+        return;
+      }
+      
       res.status(500).json({
         error: "Error al procesar el mensaje de chat",
         message: error instanceof Error ? error.message : "Unknown error",
@@ -67,6 +110,27 @@ export class AssistantController {
         return;
       }
 
+      // Validate field lengths
+      if (name.length > 100) {
+        res.status(400).json({ error: "El nombre es demasiado largo (máximo 100 caracteres)" });
+        return;
+      }
+
+      if (phone.length > 20) {
+        res.status(400).json({ error: "El teléfono es demasiado largo (máximo 20 caracteres)" });
+        return;
+      }
+
+      if (email && email.length > 100) {
+        res.status(400).json({ error: "El email es demasiado largo (máximo 100 caracteres)" });
+        return;
+      }
+
+      if (course_name.length > 200) {
+        res.status(400).json({ error: "El nombre del curso es demasiado largo" });
+        return;
+      }
+
       // Validate phone format (basic validation)
       const phoneRegex = /^[0-9\s\-\+\(\)]+$/;
       if (!phoneRegex.test(phone)) {
@@ -74,33 +138,39 @@ export class AssistantController {
         return;
       }
 
+      // Sanitize inputs to prevent XSS in emails
+      const sanitizedName = sanitizeHtml(name, { allowedTags: [], allowedAttributes: {} });
+      const sanitizedPhone = sanitizeHtml(phone, { allowedTags: [], allowedAttributes: {} });
+      const sanitizedEmail = email ? sanitizeHtml(email, { allowedTags: [], allowedAttributes: {} }) : undefined;
+      const sanitizedCourseName = sanitizeHtml(course_name, { allowedTags: [], allowedAttributes: {} });
+
       // Send email notification
       const emailContent = {
         to: config.resend.emailTo || "",
         from: config.resend.emailFrom || "",
-        subject: `Nuevo interesado - ${course_name} - ${name}`,
+        subject: `Nuevo interesado - ${sanitizedCourseName} - ${sanitizedName}`,
         text: `Nuevo contacto desde el asistente de IA:
         
-Nombre: ${name}
-Teléfono: ${phone}
-Email: ${email || "No proporcionado"}
+Nombre: ${sanitizedName}
+Teléfono: ${sanitizedPhone}
+Email: ${sanitizedEmail || "No proporcionado"}
 
 Curso de interés:
-  - ${course_name} (ID: ${course_id})
+  - ${sanitizedCourseName} (ID: ${course_id})
 
 Este lead fue generado cuando el usuario hizo click en "Me interesa" desde el asistente de orientación académica.`,
         html: `
 <h2>Nuevo contacto desde el asistente de IA</h2>
 
 <ul>
-  <li><strong>Nombre:</strong> ${name}</li>
-  <li><strong>Teléfono:</strong> ${phone}</li>
-  <li><strong>Email:</strong> ${email || "No proporcionado"}</li>
+  <li><strong>Nombre:</strong> ${sanitizedName}</li>
+  <li><strong>Teléfono:</strong> ${sanitizedPhone}</li>
+  <li><strong>Email:</strong> ${sanitizedEmail || "No proporcionado"}</li>
 </ul>
 
 <h3>Curso de interés:</h3>
 <ul>
-  <li><strong>${course_name}</strong> (ID: ${course_id})</li>
+  <li><strong>${sanitizedCourseName}</strong> (ID: ${course_id})</li>
 </ul>
 
 <p><em>Este lead fue generado cuando el usuario hizo click en "Me interesa" desde el asistente de orientación académica.</em></p>

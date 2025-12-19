@@ -3,6 +3,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import emailRoutes from "./routes/email";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import diplomaRoutes from "./routes/diploma";
 import authRoutes from "./routes/authRoutes";
 import assistantRoutes from "./routes/assistantRoutes";
@@ -15,8 +16,14 @@ import { initializeDatabase } from "./database/connection";
 const corsOptions = {
   origin: function (origin: any, callback: any) {
     const pattern = /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/;
-callback(null, true);
-return;
+    
+    // Allow localhost in development
+    if (config.server.nodeEnv === 'development') {
+      callback(null, true);
+      return;
+    }
+    
+    // Production: strict validation
     if (!origin || pattern.test(origin)) {
       callback(null, true);
     } else {
@@ -30,6 +37,7 @@ return;
     "Authorization",
     "X-Requested-With",
     "Content-Disposition",
+    "X-CSRF-Token",
   ],
 };
 
@@ -37,6 +45,7 @@ const app = express();
 const PORT = config.server.port;
 
 app.use(helmet()); // Seguridad
+app.use(cookieParser()); // Parse cookies for CSRF
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
