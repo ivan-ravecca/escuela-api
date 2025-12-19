@@ -16,8 +16,7 @@ const config = {
     allowedDomain: process.env.ALLOWED_DOMAIN,
   },
   cors: {
-    siteUrl: process.env.SITE_URL,
-    baseUrl: process.env.BASE_URL,
+    siteUrl: process.env.SITE_URL
   },
   resend: {
     apiKey: process.env.RESEND_API_KEY,
@@ -26,6 +25,19 @@ const config = {
   },
   crypto: {
     hashSecret: process.env.HASH_SECRET,
+    csrfSecret: process.env.CSRF_SECRET || "change-this-csrf-secret-in-production",
+  },
+  anthropic: {
+    apiKey: process.env.ANTHROPIC_API_KEY || "",
+    model: process.env.ANTHROPIC_MODEL || "claude-3-5-haiku-20241022",
+    maxTokens: parseInt(process.env.ANTHROPIC_MAX_TOKENS || "2048"),
+  },
+  database: {
+    host: process.env.DB_HOST || "localhost",
+    port: parseInt(process.env.DB_PORT || "3306"),
+    user: process.env.DB_USER || "escuelaapi",
+    password: process.env.DB_PASSWORD || "",
+    name: process.env.DB_NAME || "escuela",
   },
 };
 
