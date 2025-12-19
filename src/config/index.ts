@@ -16,8 +16,7 @@ const config = {
     allowedDomain: process.env.ALLOWED_DOMAIN,
   },
   cors: {
-    siteUrl: process.env.SITE_URL,
-    baseUrl: process.env.BASE_URL,
+    siteUrl: process.env.SITE_URL
   },
   resend: {
     apiKey: process.env.RESEND_API_KEY,
