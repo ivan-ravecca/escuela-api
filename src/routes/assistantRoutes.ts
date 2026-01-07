@@ -1,7 +1,12 @@
 import { Router } from "express";
 import rateLimit from "express-rate-limit";
 import { AssistantController } from "../controllers/assistantController";
-import { generateToken, validateRequest } from "../middleware/csrfMiddleware";
+import {
+  generateToken,
+  validateRequest as validateCsrf,
+} from "../middleware/csrfMiddleware";
+import { validate } from "../middleware/validateMiddleware";
+import { chatSchema, leadCaptureSchema } from "../schemas";
 
 const router = Router();
 
@@ -39,9 +44,21 @@ router.get("/csrf-token", (req, res) => {
 });
 
 // Chat endpoint
-router.post("/chat", chatLimiter, validateRequest, AssistantController.chat);
+router.post(
+  "/chat",
+  chatLimiter,
+  validateCsrf,
+  validate(chatSchema),
+  AssistantController.chat,
+);
 
 // Capture interest endpoint
-router.post("/interest", leadLimiter, validateRequest, AssistantController.captureInterest);
+router.post(
+  "/interest",
+  leadLimiter,
+  validateCsrf,
+  validate(leadCaptureSchema),
+  AssistantController.captureInterest,
+);
 
 export default router;

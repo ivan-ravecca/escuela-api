@@ -1,6 +1,7 @@
 import path from "path";
 import express from "express";
 import bodyParser from "body-parser";
+import morgan from "morgan";
 import emailRoutes from "./routes/email";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -45,6 +46,7 @@ const app = express();
 const PORT = config.server.port;
 
 app.use(helmet()); // Seguridad
+app.use(morgan(config.server.nodeEnv === "development" ? "dev" : "combined"));
 app.use(cookieParser()); // Parse cookies for CSRF
 app.use(express.json());
 

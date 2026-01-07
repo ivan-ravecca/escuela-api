@@ -3,25 +3,26 @@ import * as authService from "../services/authService";
 import config from "../config";
 
 /**
- * Inicia sesión con token de Google
+ * Login with Google token
  */
 export const login = async (req: Request, res: Response) => {
   try {
     const { googleToken } = req.body;
 
+    // Validation is handled by middleware, but keep as fallback
     if (!googleToken) {
       res.status(400).json({ message: "Token de Google no proporcionado" });
       return;
     }
 
-    // Verificar si es un ID token o Access token
+    // Check if it's an ID token or Access token
     let userInfo;
 
     try {
-      // Intentar como ID token primero
+      // Try as ID token first
       userInfo = await authService.verifyGoogleToken(googleToken);
     } catch (error) {
-      // Si falla, intentar como access token
+      // If it fails, try as access token
       try {
         userInfo = await authService.getUserInfoFromAccessToken(googleToken);
       } catch (innerError) {
@@ -31,10 +32,10 @@ export const login = async (req: Request, res: Response) => {
       }
     }
 
-    // Generar token JWT
+    // Generate JWT token
     const token = authService.generateToken(userInfo);
 
-    // Devolver el token al cliente
+    // Return the token to the client
     res.status(200).json({
       token,
       user: {
@@ -55,21 +56,22 @@ export const login = async (req: Request, res: Response) => {
 };
 
 /**
- * Verifica un token JWT
+ * Verify a JWT token
  */
 export const verifyToken = (req: Request, res: Response) => {
   try {
     const { token } = req.body;
 
+    // Validation is handled by middleware, but keep as fallback
     if (!token) {
       res.status(400).json({ message: "Token no proporcionado" });
       return;
     }
 
-    // Verificar el token
+    // Verify the token
     const userInfo = authService.verifyToken(token);
 
-    // Verificar que el usuario pertenece al dominio permitido
+    // Verify the user belongs to the allowed domain
     if (!userInfo.email.endsWith(`@${config.google.allowedDomain}`)) {
       res.status(403).json({
         valid: false,
@@ -84,7 +86,7 @@ export const verifyToken = (req: Request, res: Response) => {
     });
     return;
   } catch (error: any) {
-    console.error("Error al verificar token:", error);
+    console.error("Error verifying token:", error);
     res.status(401).json({
       valid: false,
       message: error.message || "Token inválido o expirado",
@@ -94,10 +96,10 @@ export const verifyToken = (req: Request, res: Response) => {
 };
 
 /**
- * Obtiene información del usuario actual
+ * Get current user information
  */
 export const getCurrentUser = (req: Request, res: Response) => {
-  // El middleware de autenticación ya ha verificado el token y agregado el usuario al request
+  // The auth middleware has already verified the token and added the user to the request
   if (!req.user) {
     res.status(401).json({ message: "No autenticado" });
     return;
