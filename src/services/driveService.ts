@@ -1,6 +1,6 @@
 import { google } from "googleapis";
 import { Readable } from "stream";
-import { DriveFileResponse } from "../types/index";
+import { DriveFileResponse, DriveUploadResult } from "../types/index";
 
 import fs from "fs";
 import path from "path";
@@ -41,7 +41,7 @@ async function getDriveClientJWT(): Promise<any> {
     // Create JWT client using service account
     const authGoogle = new google.auth.GoogleAuth({
       keyFile: KEY_FILE_PATH,
-      scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+      scopes: ["https://www.googleapis.com/auth/drive"],
     });
     const authClient = await authGoogle.getClient();
     return google.drive({ version: "v3", auth: authClient as any });
@@ -92,4 +92,115 @@ export async function getDriveFileJWT(
     //console.error("Error al obtener el archivo de Google Drive:", error);
     throw error;
   }
+}
+
+/**
+ * Downloads a PDF file from Google Drive as a Buffer
+ * @param fileId Google Drive file ID
+ * @returns PDF file as Buffer
+ */
+export async function getDriveFileAsBuffer(fileId: string): Promise<Buffer> {
+  try {
+    const drive = await getDriveClientJWT();
+
+    // Verificar que el archivo existe y es accesible
+    const fileMetadata = await drive.files.get({
+      fileId: fileId,
+      fields: "name,mimeType",
+    });
+
+    // Comprobar que es un PDF
+    if (fileMetadata.data.mimeType !== "application/pdf") {
+      throw new Error("El archivo no es un PDF");
+    }
+
+    // Obtener el contenido del archivo
+    const response = await drive.files.get(
+      {
+        fileId: fileId,
+        alt: "media",
+      },
+      { responseType: "arraybuffer" },
+    );
+
+    return Buffer.from(response.data as ArrayBuffer);
+  } catch (error) {
+    console.error("Error al descargar el archivo de Google Drive:", error);
+    throw error;
+  }
+}
+
+/**
+ * Uploads a file to Drive or replaces an existing one with the same name.
+ * Returns the file id and a webViewLink that can be shared.
+ * @param fileName Name of the file
+ * @param fileBuffer File content as Buffer
+ * @param mimeType MIME type of the file
+ * @param parentFolderId Optional parent folder ID where the file should be saved
+ */
+export async function uploadOrReplaceFile(
+  fileName: string,
+  fileBuffer: Buffer,
+  mimeType: string = "application/pdf",
+  parentFolderId?: string,
+): Promise<DriveUploadResult> {
+  const drive = await getDriveClientJWT();
+
+  // Build query to look for existing file with the same name
+  let query = `name='${fileName.replace(/'/g, "\\'")}' and trashed=false`;
+  if (parentFolderId) {
+    query += ` and '${parentFolderId}' in parents`;
+  }
+
+  const existingFiles = await drive.files.list({
+    q: query,
+    fields: "files(id,name,webViewLink)",
+  });
+
+  const existingFileId = existingFiles.data.files?.[0]?.id;
+  const media = { mimeType, body: Readable.from(fileBuffer) };
+
+  let fileId = existingFileId;
+
+  if (fileId) {
+    // Update existing file
+    await drive.files.update({
+      fileId,
+      media,
+      fields: "id,name,webViewLink",
+    });
+  } else {
+    // Create new file
+    const requestBody: any = { name: fileName };
+    if (parentFolderId) {
+      requestBody.parents = [parentFolderId];
+    }
+    const created = await drive.files.create({
+      requestBody,
+      media,
+      fields: "id,name,webViewLink",
+    });
+    fileId = created.data.id as string;
+  }
+
+  // Ensure the file is shareable by anyone with the link
+  await drive.permissions.create({
+    fileId,
+    requestBody: {
+      role: "reader",
+      type: "anyone",
+    },
+    fields: "id",
+  });
+
+  const { data } = await drive.files.get({
+    fileId,
+    fields: "id,name,webViewLink",
+  });
+
+  return {
+    fileId,
+    name: data.name || fileName,
+    webViewLink: data.webViewLink || "",
+  };
 }

@@ -41,6 +41,12 @@ export interface DriveFileResponse {
   };
 }
 
+export interface DriveUploadResult {
+  fileId: string;
+  name?: string;
+  webViewLink: string;
+}
+
 /**
  * Data interface for PDF template fields
  */
@@ -50,3 +56,6 @@ export interface CertificateData {
   courseDate?: string;
   qrImageBase64?: string;
 }
+
+// Re-export ProgramOption from centralized config
+export type { ProgramOption } from "../config/programOptions";
