@@ -95,6 +95,7 @@ export class AssistantController {
       const emailContent = {
         to: config.resend.emailTo || "",
         from: config.resend.emailFrom || "",
+        replyTo: sanitizedEmail,
         subject: `Nuevo interesado - ${sanitizedCourseName} - ${sanitizedName}`,
         text: `Nuevo contacto desde el asistente de IA:
         

@@ -25,6 +25,7 @@ router.post(
     const msg = {
       to: EMAIL_TO,
       from: EMAIL_FROM,
+      replyTo: email,
       subject: `Contacto desde la web - ${name}`,
       text: `El siguiente es un mensaje generado desde la web:
           Nombre: ${name}
@@ -57,6 +58,7 @@ router.post(
     const msg = {
       to: EMAIL_TO,
       from: EMAIL_FROM,
+      replyTo: email,
       subject: `Bedelías: ${inquire}`,
       text: `La siguiente es una solicitud desde la web para el trámite de ${inquire}:
           Nombre: ${name}

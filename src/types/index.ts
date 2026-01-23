@@ -28,7 +28,7 @@ export interface EmailMessage {
   subject: string;
   text: string; // Make text required as Resend needs it
   html?: string;
-  reply_to?: string;
+  replyTo?: string;
   cc?: string | string[];
   bcc?: string | string[];
 }
