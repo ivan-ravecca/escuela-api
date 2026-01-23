@@ -3,12 +3,15 @@ import {
   getDriveFileJWT,
   extractFileIdFromUrl,
   AuthenticationRequiredError,
+  uploadOrReplaceFile,
+  getDriveFileAsBuffer,
 } from "../services/driveService";
 import { createHash, verifyHash } from "../services/hashService";
 import { generateQRCode } from "../services/qrService";
-import { fillPDFTemplate } from "../services/pdfTemplateService";
+import { fillPDFTemplate, combinePDFs } from "../services/pdfTemplateService";
 import { authMiddleware } from "../middleware/authMiddleware";
 import config from "../config";
+import { PROGRAM_DRIVE_LINKS, type ProgramOption } from "../config/programOptions";
 
 const path = require("path");
 
@@ -124,8 +127,15 @@ router.get(
 );
 
 router.post("/certificate", authMiddleware, async (req, res) => {
-  const { studentName, courseName, courseDate, certMec, driveUrl } = req.body;
-  const templatePath = path.resolve(
+  const {
+    studentName,
+    courseName,
+    courseDate,
+    certMec,
+    programOption,
+  } = req.body;
+
+  const baseTemplatePath = path.resolve(
     __dirname,
     "../../src/templates/certificate.pdf",
   );
@@ -133,53 +143,199 @@ router.post("/certificate", authMiddleware, async (req, res) => {
     __dirname,
     "../../src/templates/certificate_MEC.pdf",
   );
+
+  const templatePathToUse = certMec ? templateMECPath : baseTemplatePath;
+  const certificateFileName = `Certificado ${
+    studentName || "sin-nombre"
+  } - ${courseName || "sin-curso"} - ${courseDate || "sin-fecha"}.pdf`;
+
+  // If no programOption, it's a course certificate; otherwise it's a program certificate
+  const isCourseCert = !programOption;
+
   let qrImageBase64: string | undefined;
-  // console.log(
-  //   `studentName: ${studentName}, courseName: ${courseName}, courseDate: ${courseDate}, certMec: ${certMec ? "SI" : "NO"}, driveUrl: ${driveUrl}`,
-  // );
+  let pdfBuffer: Buffer = null as any;
+
   try {
-    if (!certMec) {
-      if (!driveUrl) {
-        res.status(400).send("Se requiere un link de Google Drive");
-        return;
+    if (isCourseCert) {
+      if (certMec) {
+        // MEC flow: no QR generation, just create and upload once
+        pdfBuffer = await fillPDFTemplate(templatePathToUse, {
+          studentName,
+          courseName,
+          courseDate,
+        });
+
+        await uploadOrReplaceFile(
+          certificateFileName,
+          pdfBuffer,
+          "application/pdf",
+          config.drive.folderId,
+        );
+      } else {
+        // Non-MEC course flow: two-step to get Drive link, then QR via hashed URL
+        const initialPdfBuffer = await fillPDFTemplate(templatePathToUse, {
+          studentName,
+          courseName,
+          courseDate,
+        });
+
+        const initialUpload = await uploadOrReplaceFile(
+          certificateFileName,
+          initialPdfBuffer,
+          "application/pdf",
+          config.drive.folderId,
+        );
+
+        if (!initialUpload.webViewLink) {
+          res
+            .status(500)
+            .send("No se pudo obtener el enlace compartido de Google Drive");
+          return;
+        }
+
+        const uploadedFileId = extractFileIdFromUrl(initialUpload.webViewLink);
+        if (!uploadedFileId) {
+          res
+            .status(500)
+            .send(
+              "No se pudo extraer el ID del archivo de Google Drive del enlace compartido",
+            );
+          return;
+        }
+
+        const qrImage: Buffer = await processGenerationOfQR(uploadedFileId);
+        qrImageBase64 = qrImage.toString("base64");
+
+        pdfBuffer = await fillPDFTemplate(templatePathToUse, {
+          studentName,
+          courseName,
+          courseDate,
+          qrImageBase64,
+        });
+
+        await uploadOrReplaceFile(
+          certificateFileName,
+          pdfBuffer,
+          "application/pdf",
+          config.drive.folderId,
+        );
       }
-      // Extraer el ID del archivo del link de Google Drive
-      const fileId: string | null = extractFileIdFromUrl(driveUrl);
+    } else if (programOption) {
+      if (certMec) {
+        // MEC flow with program: no QR generation, just create and upload once
+        pdfBuffer = await fillPDFTemplate(templatePathToUse, {
+          studentName,
+          courseName,
+          courseDate,
+        });
 
-      if (!fileId || typeof fileId !== "string") {
-        res.status(400).send("Link de Google Drive inválido");
-        return;
+        await uploadOrReplaceFile(
+          certificateFileName,
+          pdfBuffer,
+          "application/pdf",
+          config.drive.folderId,
+        );
+      } else {
+        // Program without MEC: New flow
+        // 1. Generate initial certificate and upload to Drive
+        const initialPdfBuffer = await fillPDFTemplate(templatePathToUse, {
+          studentName,
+          courseName,
+          courseDate,
+        });
+
+        const initialUpload = await uploadOrReplaceFile(
+          certificateFileName,
+          initialPdfBuffer,
+          "application/pdf",
+          config.drive.folderId,
+        );
+
+        if (!initialUpload.webViewLink) {
+          res
+            .status(500)
+            .send("No se pudo obtener el enlace compartido de Google Drive");
+          return;
+        }
+
+        // 2. Generate QR pointing to "Certificado A"
+        const uploadedFileId = extractFileIdFromUrl(initialUpload.webViewLink);
+        if (!uploadedFileId) {
+          res
+            .status(500)
+            .send(
+              "No se pudo extraer el ID del archivo de Google Drive del enlace compartido",
+            );
+          return;
+        }
+
+        const qrImage: Buffer = await processGenerationOfQR(uploadedFileId);
+        qrImageBase64 = qrImage.toString("base64");
+
+        // 3. Get program PDF from Drive
+        const selectedProgram = programOption as ProgramOption;
+        const programDriveUrl = PROGRAM_DRIVE_LINKS[selectedProgram];
+
+        if (!programDriveUrl) {
+          res
+            .status(400)
+            .send("Programa inválido: opción seleccionada no configurada");
+          return;
+        }
+
+        const programFileId: string | null = extractFileIdFromUrl(programDriveUrl);
+
+        if (!programFileId || typeof programFileId !== "string") {
+          res
+            .status(400)
+            .send("Programa inválido: link de Google Drive inválido");
+          return;
+        }
+
+        // Download program PDF from Drive
+        const programPdfBuffer = await getDriveFileAsBuffer(programFileId);
+
+        // 4. Combine: certificate with QR + program PDF
+        const certificateWithQR = await fillPDFTemplate(templatePathToUse, {
+          studentName,
+          courseName,
+          courseDate,
+          qrImageBase64,
+        });
+
+        pdfBuffer = await combinePDFs([certificateWithQR, programPdfBuffer]);
+
+        // 5. Re-upload combined PDF replacing "Certificado A"
+        await uploadOrReplaceFile(
+          certificateFileName,
+          pdfBuffer,
+          "application/pdf",
+          config.drive.folderId,
+        );
       }
-
-      const qrImage: Buffer = await processGenerationOfQR(fileId);
-
-      // Convert the QR buffer to base64 string for the template
-      qrImageBase64 = qrImage.toString("base64");
     }
-    // Get PDF buffer instead of file path
-    const formData = {
-      studentName,
-      courseName,
-      courseDate,
-      ...(qrImageBase64 && { qrImageBase64 }),
-    };
-    const pdfBuffer = await fillPDFTemplate(
-      certMec ? templateMECPath : templatePath,
-      formData,
-    );
 
-    // Set headers for PDF download
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="certificado-${studentName || "sin-nombre"}.pdf"`,
     );
 
-    // Send the buffer directly
+    if (!pdfBuffer) {
+      res.status(500).send("No se pudo generar el certificado PDF");
+      return;
+    }
+
     res.send(pdfBuffer);
   } catch (error: any) {
     console.error(`Error al llenar el PDF: ${error.message}`, error);
-    res.status(500).send("Error al generar el certificado");
+    res
+      .status(500)
+      .send(
+        error?.message
+          ? `No se pudo generar el certificado: ${error.message}`
+          : "Error al generar el certificado",
+      );
   }
 });
 export default router;

@@ -28,6 +28,9 @@ const envSchema = z.object({
   HASH_SECRET: z.string().min(1, "HASH_SECRET is required"),
   CSRF_SECRET: z.string().default("change-this-csrf-secret-in-production"),
 
+  // Google Drive
+  DRIVE_FOLDER_ID: z.string().optional(),
+
   // Anthropic
   ANTHROPIC_API_KEY: z.string().optional().default(""),
   ANTHROPIC_MODEL: z.string().default("claude-3-5-haiku-20241022"),
@@ -77,6 +80,9 @@ const config = {
   crypto: {
     hashSecret: env.HASH_SECRET,
     csrfSecret: env.CSRF_SECRET,
+  },
+  drive: {
+    folderId: env.DRIVE_FOLDER_ID,
   },
   anthropic: {
     apiKey: env.ANTHROPIC_API_KEY,

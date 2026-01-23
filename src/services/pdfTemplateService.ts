@@ -120,4 +120,34 @@ async function fillPDFTemplate(
   }
 }
 
-export { fillPDFTemplate };
+/**
+ * Combines multiple PDF documents into one
+ * @param pdfBuffers Array of PDF buffers to combine
+ * @returns Combined PDF as Buffer
+ */
+async function combinePDFs(pdfBuffers: Buffer[]): Promise<Buffer> {
+  try {
+    // Create a new PDF document
+    const combinedPdf = await PDFDocument.create();
+
+    // Process each PDF buffer
+    for (const buffer of pdfBuffers) {
+      const pdf = await PDFDocument.load(buffer);
+      const pages = await combinedPdf.copyPages(pdf, pdf.getPageIndices());
+      
+      // Add all pages to the combined document
+      pages.forEach((page) => {
+        combinedPdf.addPage(page);
+      });
+    }
+
+    // Save the combined PDF
+    const combinedPdfBytes = await combinedPdf.save();
+    return Buffer.from(combinedPdfBytes);
+  } catch (error) {
+    console.error("Error combinando PDFs:", error);
+    throw error;
+  }
+}
+
+export { fillPDFTemplate, combinePDFs };

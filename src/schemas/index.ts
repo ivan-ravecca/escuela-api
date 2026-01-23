@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PROGRAM_OPTION_VALUES } from "../config/programOptions";
 
 // ============================================
 // Email Schemas
@@ -68,6 +69,7 @@ export const certificateSchema = z.object({
   courseDate: z.string().min(1, "Fecha del curso es obligatoria"),
   certMec: z.boolean().optional().default(false),
   driveUrl: z.string().url("URL de Google Drive inválida").optional(),
+  programOption: z.enum(PROGRAM_OPTION_VALUES as [string, ...string[]]).optional(),
 });
 
 // ============================================
