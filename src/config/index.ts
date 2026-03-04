@@ -33,7 +33,7 @@ const envSchema = z.object({
 
   // Anthropic
   ANTHROPIC_API_KEY: z.string().optional().default(""),
-  ANTHROPIC_MODEL: z.string().default("claude-3-5-haiku-20241022"),
+  ANTHROPIC_MODEL: z.string().default("claude-haiku-4-5-20251001"),
   ANTHROPIC_MAX_TOKENS: z.string().transform(Number).default(2048),
 
   // Database
