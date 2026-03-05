@@ -1,27 +1,24 @@
 # Escuela API
 
-API integral para una institución educativa de enfermería que incluye:
-- 🎓 Gestión de certificados y diplomas
-- 🤖 **Asistente de IA para orientación académica** (NUEVO)
-- 📧 Envío de emails y notificaciones
-- 📚 Catálogo de cursos y programas
-- 🔐 Autenticación y autorización
+Comprehensive API for a nursing educational institution including:
+- 🎓 Certificate and diploma management
+- 🤖 AI assistant for academic guidance
+- 📧 Email and notification sending
+- 📚 Course and program catalog
+- 🔐 Authentication and authorization
 
-## ✨ Nuevo: Asistente de IA
+## ✨ New: AI Assistant
 
-Sistema completo de asistente conversacional que ayuda a potenciales estudiantes a encontrar el curso ideal:
+Complete conversational assistant system that helps prospective students find the ideal course:
 
-- **Claude 3.5 Haiku** - IA conversacional en español
-- **Recomendaciones personalizadas** basadas en perfil del usuario
-- **Captura de leads** con integración a email
-- **Rate limiting** para prevenir abuso
-- **Base de datos** con catálogo de cursos
+- **Claude 4.5 Haiku** - Conversational AI in Spanish
+- **Personalized recommendations** based on user profile
+- **Lead capture** with email integration
+- **Rate limiting** to prevent abuse
+- **Database** with course catalog
 
-📖 **Ver documentación completa:**
-- [ASSISTANT_README.md](./ASSISTANT_README.md) - Guía técnica detallada
-- [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) - Resumen ejecutivo
-- [FRONTEND_PROMPTS.md](./FRONTEND_PROMPTS.md) - Para implementar el widget
-- [CHECKLIST.md](./CHECKLIST.md) - Lista de verificación
+📖 **See full documentation:**
+- [ASSISTANT_README.md](./ASSISTANT_README.md) - Detailed technical guide
 
 ## 📑 Table of Contents
 
@@ -79,7 +76,7 @@ escuela-api
 ├── data/
 │   └── courses.db                    # SQLite database (NEW)
 ├── src/
-│   ├── app.ts                        # Entry point of the application
+│   ├── app.ts                        # Application entry point
 │   ├── config/
 │   │   └── index.ts                  # Configuration (including Anthropic)
 │   ├── controllers/
@@ -388,89 +385,85 @@ fetch(
 - **prettier** - Code formatting
 - **eslint** - Code linting
 
-## Deployment
-
-Guía completa de deployment en [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ### Quick Deploy
 
 1. **Configure environment variables:**
-   ```bash
-   # Required for AI Assistant
-   ANTHROPIC_API_KEY=sk-ant-api03-xxxxx
-   RESEND_API_KEY=re_xxxxx
-   EMAIL_TO=contacto@escuelaenfermeria.com.uy
-   EMAIL_FROM=noreply@escuelaenfermeria.com.uy
-   ```
+  ```bash
+  # Required for AI Assistant
+  ANTHROPIC_API_KEY=sk-ant-api03-xxxxx
+  RESEND_API_KEY=re_xxxxx
+  EMAIL_TO=contacto@escuelaenfermeria.com.uy
+  EMAIL_FROM=noreply@escuelaenfermeria.com.uy
+  ```
 
 2. **Build and initialize:**
-   ```bash
-   npm install
-   npm run build
-   npm run seed
-   ```
+  ```bash
+  npm install
+  npm run build
+  npm run seed
+  ```
 
 3. **Start production server:**
-   ```bash
-   npm start
-   # or with PM2:
-   pm2 start dist/app.js --name escuela-api
-   ```
+  ```bash
+  npm start
+  # or with PM2:
+  pm2 start dist/app.js --name escuela-api
+  ```
 
 4. **Configure reverse proxy (Nginx):**
-   ```nginx
-   server {
-       listen 80;
-       server_name api.escuelaenfermeria.com.uy;
-       location / {
-           proxy_pass http://localhost:3000;
-       }
-   }
-   ```
+  ```nginx
+  server {
+     listen 80;
+     server_name api.escuelaenfermeria.com.uy;
+     location / {
+        proxy_pass http://localhost:3000;
+     }
+  }
+  ```
 
 5. **Setup SSL with Let's Encrypt:**
-   ```bash
-   sudo certbot --nginx -d api.escuelaenfermeria.com.uy
-   ```
+  ```bash
+  sudo certbot --nginx -d api.escuelaenfermeria.com.uy
+  ```
 
 ### Platform-Specific Deploy
 
-- **Railway/Render**: Conecta el repo Git y configura las env vars
-- **Heroku**: Ver [DEPLOYMENT.md](./DEPLOYMENT.md#deploy-en-heroku)
-- **VPS**: Ver [DEPLOYMENT.md](./DEPLOYMENT.md#deploy-en-vps-ubuntu)
+- **Railway/Render**: Connect the Git repo and configure env vars
+- **Heroku**: See [DEPLOYMENT.md](./DEPLOYMENT.md#deploy-on-heroku)
+- **VPS**: See [DEPLOYMENT.md](./DEPLOYMENT.md#deploy-on-vps-ubuntu)
+
 
 ## 📚 Additional Documentation
 
-- [ASSISTANT_README.md](./ASSISTANT_README.md) - Guía completa del asistente de IA
-- [IMPLEMENTATION_SUMMARY.md](./IMPLEMENTATION_SUMMARY.md) - Resumen de implementación
-- [FRONTEND_PROMPTS.md](./FRONTEND_PROMPTS.md) - Integración con React frontend
-- [DEPLOYMENT.md](./DEPLOYMENT.md) - Guía detallada de deployment
-- [CHECKLIST.md](./CHECKLIST.md) - Lista de verificación pre-deployment
+- [ASSISTANT_README.md](./ASSISTANT_README.md) - AI Assistant technical guide
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture and diagrams
+- [DOCKER_DATABASE.md](./DOCKER_DATABASE.md) - MariaDB setup with Docker
 
 ## 📊 Cost Estimation
 
-**Claude 3.5 Haiku:**
-- ~$0.003 por conversación
-- 1000 conversaciones/mes: ~$3 USD
-- 10,000 conversaciones/mes: ~$30 USD
+**Claude 4.5 Haiku:**
+- ~$0.003 per conversation
+- 1000 conversations/month: ~$3 USD
+- 10,000 conversations/month: ~$30 USD
 
-**Otros servicios:**
-- Resend: Free tier hasta 3000 emails/mes
-- Hosting: Variable según proveedor
+**Other services:**
+- Resend: Free tier up to 3000 emails/month
+- Hosting: Variable depending on provider
 
 ## 🔒 Security
 
-- ✅ CORS configurado
-- ✅ Helmet para security headers
-- ✅ Rate limiting activo
+- ✅ CORS configured
+- ✅ Helmet for security headers
+- ✅ Rate limiting enabled
 - ✅ JWT authentication
-- ✅ Environment variables protegidas
-- ⚠️ CRUD endpoints requieren auth en producción
+- ✅ Environment variables protected
+- ⚠️ CRUD endpoints require auth in production
 
 ## 🤝 Contributing
 
-1. Fork el proyecto
-2. Crea una feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la branch (`git push origin feature/AmazingFeature`)
-5. Abre un Pull Request
+1. Fork the project
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
