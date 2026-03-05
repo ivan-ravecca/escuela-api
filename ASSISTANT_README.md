@@ -1,55 +1,55 @@
 # Escuela API - AI Assistant
 
-Este README documenta la funcionalidad del asistente de IA para orientación académica.
+This README documents the functionality of the AI assistant for academic guidance.
 
-## 🤖 Asistente de Orientación Académica
+## 🤖 Academic Guidance Assistant
 
-Sistema de asistente AI que ayuda a los potenciales estudiantes a encontrar el curso o carrera de enfermería más adecuado según su perfil.
+AI assistant system that helps prospective students find the most suitable nursing course or career based on their profile.
 
-### Tecnologías
+### Technologies
 
-- **Claude 3.5 Haiku** - Modelo de IA de Anthropic (económico y rápido)
-- **MCP (Model Context Protocol)** - Para gestión del catálogo de cursos
-- **SQLite** - Base de datos de cursos
-- **Express Rate Limiting** - Protección contra abuso
-- **Resend** - Envío de emails para captura de leads
+- **Claude 3.5 Haiku** - Anthropic AI model (fast and economical)
+- **MCP (Model Context Protocol)** - For course catalog management
+- **SQLite** - Course database
+- **Express Rate Limiting** - Protection against abuse
+- **Resend** - Email sending for lead capture
 
-## 🚀 Configuración
+## 🚀 Setup
 
-### 1. Variables de Entorno
+### 1. Environment Variables
 
-Agrega estas variables a tu archivo `.env`:
+Add these variables to your `.env` file:
 
 ```bash
 # Anthropic API
-ANTHROPIC_API_KEY=tu_api_key_aqui
+ANTHROPIC_API_KEY=your_api_key_here
 ANTHROPIC_MODEL=claude-3-5-haiku-20241022
 ANTHROPIC_MAX_TOKENS=2048
 
-# Ya existentes
-RESEND_API_KEY=tu_resend_key
-EMAIL_TO=destinatario@escuelaenfermeria.com.uy
+# Existing
+RESEND_API_KEY=your_resend_key
+EMAIL_TO=recipient@escuelaenfermeria.com.uy
 EMAIL_FROM=noreply@escuelaenfermeria.com.uy
 ```
 
-### 2. Inicializar Base de Datos
+### 2. Initialize Database
 
-Primero, compila el proyecto y luego ejecuta el seeder:
+First, build the project and then run the seeder:
 
 ```bash
 npm run build
 npm run seed
 ```
 
-O en desarrollo:
+Or in development:
 
 ```bash
 npm run seed:dev
 ```
 
-### 3. Scripts en package.json
+### 3. Scripts in package.json
 
-Agrega estos scripts a tu `package.json`:
+Add these scripts to your `package.json`:
 
 ```json
 {
@@ -65,7 +65,7 @@ Agrega estos scripts a tu `package.json`:
 
 ### GET /assistant/welcome
 
-Obtiene el mensaje de bienvenida inicial.
+Gets the initial welcome message.
 
 **Response:**
 ```json
@@ -76,9 +76,9 @@ Obtiene el mensaje de bienvenida inicial.
 
 ### POST /assistant/chat
 
-Envía un mensaje al asistente y recibe recomendaciones.
+Sends a message to the assistant and receives recommendations.
 
-**Rate Limit:** 10 requests/minuto por IP
+**Rate Limit:** 10 requests/minute per IP
 
 **Request:**
 ```json
@@ -117,17 +117,18 @@ Envía un mensaje al asistente y recibe recomendaciones.
 
 ### POST /assistant/interest
 
-Captura el interés de un estudiante (envía email).
+Captures a student's interest (sends email).
 
-**Rate Limit:** 3 requests/hora por IP
+
+**Rate Limit:** 3 requests/hour per IP
 
 **Request:**
 ```json
 {
   "name": "Juan Pérez",
   "phone": "+598 99 123 456",
-  "email": "juan@example.com",
-  "interested_courses": ["Auxiliar de Enfermería", "Primeros Auxilios"]
+  "email": "john@example.com",
+  "interested_courses": ["Nursing Assistant", "First Aid"]
 }
 ```
 
@@ -139,9 +140,9 @@ Captura el interés de un estudiante (envía email).
 }
 ```
 
-## 🗄️ Base de Datos
+## 🗄️ Database
 
-### Estructura de Cursos
+### Course Structure
 
 ```sql
 CREATE TABLE courses (
@@ -161,46 +162,52 @@ CREATE TABLE courses (
 );
 ```
 
-### Operaciones CRUD
+### CRUD Operations
 
 ```typescript
 import { CourseRepository } from "./database/courseRepository";
 
-// Obtener todos los cursos
+// Get all courses
 const courses = CourseRepository.getAllCourses();
 
-// Buscar por categoría
+// Search by category
 const initialCourses = CourseRepository.getCoursesByCategory("inicial");
 
-// Buscar por modalidad
+// Search by modality
 const onlineCourses = CourseRepository.getCoursesByModality("virtual");
 
-// Buscar por texto
+// Search by text
 const searchResults = CourseRepository.searchCourses("pediatría");
 
-// Crear curso
+// Create course
 const newCourse = CourseRepository.createCourse({
-  name: "Nuevo Curso",
+  name: "New Course",
   url: "https://...",
-  // ... otros campos
+  // ... other fields
 });
 ```
 
-## 🎯 Flujo de Conversación
+## 🎯 Conversation Flow
 
-1. Usuario abre el widget de chat
-2. Recibe mensaje de bienvenida (`/assistant/welcome`)
-3. Comienza conversación enviando mensajes (`/assistant/chat`)
-4. El asistente hace preguntas para entender su perfil
-5. Una vez tiene suficiente información, recomienda 1-3 cursos
-6. Pregunta si quiere ser contactado
-7. Usuario envía sus datos (`/assistant/interest`)
-8. Sistema envía email al equipo de ventas
+1. User opens the chat widget
+2. Receives welcome message (`/assistant/welcome`)
+3. Starts conversation by sending messages (`/assistant/chat`)
+4. Assistant asks questions to understand their profile
+5. Once enough information is gathered, recommends 1-3 courses
+6. Asks if they want to be contacted
+7. User sends their data (`/assistant/interest`)
+8. System sends email to the sales team
 
-## 🛡️ Seguridad
+## 🛡️ Security
 
-- **Rate Limiting**: Previene abuso de la API
-- **CORS**: Ya configurado en tu app.ts
-- **Validación**: Todos los endpoints validan inputs
-- **Sanitización**: Los mensajes son procesados de forma segura
+- **Rate Limiting**: Prevents API abuse
+- **CORS**: Already configured in your app.ts
+- **Validation**: All endpoints validate inputs
+- **Sanitization**: Messages are processed securely
+
+## 📚 Additional Documentation
+
+- [README.md](./README.md) - Main project documentation
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture and diagrams
+- [DOCKER_DATABASE.md](./DOCKER_DATABASE.md) - MariaDB setup with Docker
 

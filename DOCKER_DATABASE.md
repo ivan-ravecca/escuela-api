@@ -1,33 +1,33 @@
-# Guía de MariaDB con Docker
+# MariaDB Guide with Docker
 
-## 🐳 Levantar la base de datos
+## 🐳 Start the Database
 
-### 1. Iniciar el contenedor
+### 1. Start the container
 
 ```bash
 docker-compose up -d
 ```
 
-Esto creará y levantará:
-- Contenedor MariaDB 11.2
-- Base de datos: `escuela`
-- Usuario: `{USER}` con password: `{PASSWORD}`
-- Puerto expuesto: `3306`
-- Volumen persistente para los datos
+This will create and start:
+- MariaDB 11.2 container
+- Database: `escuela`
+- User: `{USER}` with password: `{PASSWORD}`
+- Exposed port: `3306`
+- Persistent volume for data
 
-### 2. Verificar que está corriendo
+### 2. Check that it is running
 
 ```bash
 docker-compose ps
 ```
 
-### 3. Ver los logs
+### 3. View the logs
 
 ```bash
 docker-compose logs -f mariadb
 ```
 
-### 4. Poblar la base de datos con los cursos
+### 4. Populate the database with courses
 
 ```bash
 npm run seed:dev
@@ -35,28 +35,34 @@ npm run seed:dev
 
 ---
 
-## 🔧 Comandos útiles
+## 🔧 Useful Commands
 
-### Detener el contenedor
+### Stop the container
 
 ```bash
 docker-compose stop
 ```
 
-### Reiniciar el contenedor
+### Restart the container
 
 ```bash
 docker-compose restart
 ```
 
-### Eliminar el contenedor (mantiene los datos)
+### Remove the container (keeps data)
 
 ```bash
 docker-compose down
 ```
 
-### Eliminar el contenedor Y los datos
+### Remove the container AND the data
 
 ```bash
 docker-compose down -v
 ```
+
+## 📚 Additional Documentation
+
+- [README.md](./README.md) - Main project documentation
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture and diagrams
+- [ASSISTANT_README.md](./ASSISTANT_README.md) - AI Assistant technical guide
