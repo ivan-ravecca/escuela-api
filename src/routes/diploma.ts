@@ -75,9 +75,10 @@ router.get(
   async (req: Request, res: Response): Promise<void> => {
     const diplomaId: string = req.params.diplomaId;
     console.log(`ID del diploma: ${diplomaId}`);
+    let fileId: string | null = null
     try {
       // Verificar y decodificar el hash para obtener el ID del archivo
-      const fileId: string | null = verifyHash(diplomaId);
+      fileId = verifyHash(diplomaId);
 
       if (!fileId) {
         console.log(`diploma Invalid: ${diplomaId}`);
@@ -118,6 +119,14 @@ router.get(
 
         // Redirect to Google authentication with return URL
         res.redirect(`/auth/google?returnUrl=${encodedReturnUrl}`);
+      } else if ((error as any).status === 404 || (error as any).message?.includes("not found")) {
+        // El archivo no existe en Google Drive
+        console.error(`Archivo no encontrado: ${fileId}`, error);
+        res.status(404).json({
+          error: "Archivo no encontrado",
+          fileId: fileId,
+          message: "El archivo de diploma no existe o ha sido eliminado",
+        });
       } else {
         console.error("Error al visualizar el diploma:", error);
         res.status(500).send("Error al procesar la solicitud");
