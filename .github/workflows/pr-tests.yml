@@ -10,6 +10,20 @@ jobs:
   test-and-coverage:
     name: Test and Coverage
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      PORT: "5173"
+      JWT_SECRET: test-jwt-secret
+      JWT_EXPIRATION: 7d
+      GOOGLE_CLIENT_ID: test-google-client
+      ALLOWED_DOMAIN: escuelaenfermeria.com.uy
+      SITE_URL: https://escuelaenfermeria.com.uy
+      RESEND_API_KEY: re_test_key
+      EMAIL_TO: admin@escuelaenfermeria.com.uy
+      EMAIL_FROM: noreply@escuelaenfermeria.com.uy
+      HASH_SECRET: test-hash-secret
+      CSRF_SECRET: test-csrf-secret
+      ANTHROPIC_API_KEY: test-anthropic-key
 
     steps:
       - name: Checkout repository
@@ -18,11 +32,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Build
         run: npm run build
