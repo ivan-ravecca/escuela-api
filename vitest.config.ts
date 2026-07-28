@@ -5,7 +5,7 @@ export default defineConfig({
     globals: true,
     environment: "node",
     setupFiles: ["./src/tests/setup.ts"],
-    include: ["src/tests/**/*.test.ts"],
+    include: ["src/tests/**/*.test.ts", "tests/integration/**/*.test.ts"],
     mockReset: true,
     restoreMocks: true,
     coverage: {
