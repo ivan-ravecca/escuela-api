@@ -12,7 +12,7 @@ interface AssistantServiceDeps {
 
 interface ResendDeps {
   emails: {
-    send: (payload: unknown) => Promise<unknown>;
+    send: (...args: any[]) => Promise<any>;
   };
 }
 

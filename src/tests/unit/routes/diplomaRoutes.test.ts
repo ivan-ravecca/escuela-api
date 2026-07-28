@@ -6,7 +6,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 const mocks = vi.hoisted(() => ({
   verifyHash: vi.fn(),
   extractFileIdFromUrl: vi.fn(),
-  createHash: vi.fn(() => "hashed"),
+  createHash: vi.fn<() => string | null>(() => "hashed"),
   generateQRCode: vi.fn(),
   getDriveFileJWT: vi.fn(),
   fillPDFTemplate: vi.fn(),
