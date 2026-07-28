@@ -5,8 +5,40 @@ import { Resend } from "resend";
 import config from "../config";
 import sanitizeHtml from "sanitize-html";
 
-const assistantService = new AssistantService();
-const resend = new Resend(config.resend.apiKey);
+interface AssistantServiceDeps {
+  chat: AssistantService["chat"];
+  generateWelcomeMessage: AssistantService["generateWelcomeMessage"];
+}
+
+interface ResendDeps {
+  emails: {
+    send: (...args: any[]) => Promise<any>;
+  };
+}
+
+const defaultAssistantService = new AssistantService();
+const defaultResendClient = new Resend(config.resend.apiKey);
+
+let assistantService: AssistantServiceDeps = defaultAssistantService;
+let resendClient: ResendDeps = defaultResendClient;
+
+export const setAssistantControllerDependencies = (dependencies: {
+  assistantService?: AssistantServiceDeps;
+  resendClient?: ResendDeps;
+}): void => {
+  if (dependencies.assistantService) {
+    assistantService = dependencies.assistantService;
+  }
+
+  if (dependencies.resendClient) {
+    resendClient = dependencies.resendClient;
+  }
+};
+
+export const resetAssistantControllerDependencies = (): void => {
+  assistantService = defaultAssistantService;
+  resendClient = defaultResendClient;
+};
 
 export class AssistantController {
   static async chat(req: Request, res: Response): Promise<void> {
@@ -125,7 +157,7 @@ Este lead fue generado cuando el usuario hizo click en "Me interesa" desde el as
         `,
       };
 
-      await resend.emails.send(emailContent);
+      await resendClient.emails.send(emailContent);
 
       res.status(200).json({
         message: "¡Gracias por tu interés! Nos pondremos en contacto contigo pronto.",

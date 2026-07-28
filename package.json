@@ -7,6 +7,9 @@
     "start": "node dist/app.js",
     "build": "tsc",
     "dev": "ts-node-dev src/app.ts",
+    "test": "vitest",
+    "test:run": "vitest --run",
+    "test:coverage": "vitest --run --coverage",
     "postinstall": "npm run build",
     "seed": "node dist/scripts/seedCourses.js",
     "seed:dev": "ts-node src/scripts/seedCourses.ts"
@@ -44,11 +47,15 @@
     "@types/node": "^22.19.2",
     "@types/qrcode": "^1.5.5",
     "@types/sanitize-html": "^2.16.0",
+    "@types/supertest": "^7.2.1",
+    "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^10.8.0",
     "prettier": "^3.5.1",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.3",
+    "vitest": "^4.1.10",
     "winston": "^3.17.0"
   },
   "overrides": {
