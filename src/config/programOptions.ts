@@ -17,8 +17,9 @@ export const PROGRAM_OPTIONS: ProgramOptionItem[] = [
   { value: "prog-ac-atuss", label: "PROG. ACADÉMICO ATUSS" },
   { value: "prog-ac-ad-bq-cti", label: "PROG. ACADÉMICO AD. BQ y CTI" },
   { value: "prog-ac-camillero", label: "PROG. ACADÉMICO CAMILLERO" },
-  { value: "prog-ac-economato", label: "PROG. ACADEMICO ECONOMATO" },
-  { value: "prog-ac-chofer-sanitario", label: "PROG. ACADEMICO CHOFER SANITARIO" },
+  { value: "prog-ac-economato", label: "PROG. ACADÉMICO ECONOMATO" },
+  { value: "prog-ac-economato-2026", label: "PROG. ACADÉMICO ECONOMATO 2026" },
+  { value: "prog-ac-chofer-sanitario", label: "PROG. ACADÉMICO CHOFER SANITARIO" },
 ];
 
 // Extract valid program option values as a union type
@@ -38,5 +39,6 @@ export const PROGRAM_DRIVE_LINKS: Record<ProgramOption, string> = {
   "prog-ac-ad-bq-cti": "https://drive.google.com/file/d/1lrs2zFt6toKoOfvGR1zuQM8yGVUhLlvv/view?usp=drive_link",
   "prog-ac-camillero": "https://drive.google.com/file/d/1mgFDKYBYSA_jk-dhIXXCjdFA5WiIItiU/view?usp=drive_link",
   "prog-ac-economato": "https://drive.google.com/file/d/175ADwjwj-z0UbVFpnHZXmdMeyE-uW89O/view?usp=drive_link",
+  "prog-ac-economato-2026": "https://drive.google.com/file/d/16WWCShu9SvBnW9kmvAE9R3ShyVo_vuV9/view?usp=drive_link",
   "prog-ac-chofer-sanitario": "https://drive.google.com/file/d/1bWP9BhsOAyF24f5LbKSnCB6QEvNZCxKb/view?usp=drive_link",
 };
