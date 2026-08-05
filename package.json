@@ -12,7 +12,11 @@
     "test:coverage": "vitest --run --coverage",
     "postinstall": "npm run build",
     "seed": "node dist/scripts/seedCourses.js",
-    "seed:dev": "ts-node src/scripts/seedCourses.ts"
+    "seed:dev": "ts-node src/scripts/seedCourses.ts",
+    "db:wait": "node dist/scripts/waitForDatabase.js",
+    "db:wait:dev": "ts-node src/scripts/waitForDatabase.ts",
+    "db:init": "node dist/scripts/seedCourses.js",
+    "db:init:dev": "ts-node src/scripts/seedCourses.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.1",

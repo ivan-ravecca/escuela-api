@@ -1,10 +1,14 @@
 // AI Assistant - Course Catalog Seeder
 
-import { initializeDatabase } from "../database/connection";
+import {
+  closePool,
+  initializeDatabase,
+  resetDatabase,
+} from "../database/connection";
 import { CourseRepository } from "../database/courseRepository";
 import { CourseInput } from "../types/course";
 
-const sampleCourses: CourseInput[] = [
+export const sampleCourses: CourseInput[] = [
   {
     name: "Auxiliar de Enfermería",
     url: "https://escuelaenfermeria.com.uy/cursos/auxiliar-enfermeria",
@@ -117,12 +121,24 @@ const sampleCourses: CourseInput[] = [
   },
 ];
 
-async function seedDatabase() {
+interface SeedDatabaseOptions {
+  reset?: boolean;
+  exitOnComplete?: boolean;
+}
+
+export async function seedDatabase(
+  options: SeedDatabaseOptions = {}
+): Promise<void> {
+  const { reset = true, exitOnComplete = false } = options;
+
   console.log("Starting database seed...");
 
   try {
-    // Initialize database tables
     await initializeDatabase();
+
+    if (reset) {
+      await resetDatabase();
+    }
 
     for (const course of sampleCourses) {
       const created = await CourseRepository.createCourse(course);
@@ -132,12 +148,20 @@ async function seedDatabase() {
     console.log("\n✅ Database seeded successfully!");
     const allCourses = await CourseRepository.getAllCourses();
     console.log(`Total courses: ${allCourses.length}`);
-    process.exit(0);
   } catch (error) {
     console.error("❌ Error seeding database:", error);
-    process.exit(1);
+    throw error;
+  } finally {
+    await closePool();
+
+    if (exitOnComplete) {
+      process.exitCode = process.exitCode ?? 0;
+    }
   }
 }
 
-// Run seeder
-seedDatabase();
+if (require.main === module) {
+  seedDatabase({ exitOnComplete: true }).catch(() => {
+    process.exitCode = 1;
+  });
+}

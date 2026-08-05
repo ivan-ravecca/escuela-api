@@ -18,6 +18,7 @@ const envSchema = z.object({
 
   // CORS
   SITE_URL: z.string().pipe(z.url({ message: "SITE_URL must be a valid URL" })),
+  CORS_ALLOWED_ORIGINS: z.string().optional(),
 
   // Resend
   RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
@@ -56,6 +57,14 @@ if (!parsed.success) {
 
 const env = parsed.data;
 
+const allowedOrigins = (
+  env.CORS_ALLOWED_ORIGINS
+    ? env.CORS_ALLOWED_ORIGINS.split(",")
+    : [new URL(env.SITE_URL).origin]
+)
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const config = {
   server: {
     port: env.PORT,
@@ -71,6 +80,7 @@ const config = {
   },
   cors: {
     siteUrl: env.SITE_URL,
+    allowedOrigins,
   },
   resend: {
     apiKey: env.RESEND_API_KEY,

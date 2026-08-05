@@ -13,18 +13,11 @@ import helmet from "helmet";
 import { errorHandler } from "./middleware/errorMiddleware";
 import { initializeDatabase } from "./database/connection";
 
+const allowedOrigins = new Set(config.cors.allowedOrigins);
+
 const corsOptions = {
   origin: function (origin: any, callback: any) {
-    const pattern = /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/;
-    
-    // Allow localhost in development
-    if (config.server.nodeEnv === 'development') {
-      callback(null, true);
-      return;
-    }
-    
-    // Production: strict validation
-    if (!origin || pattern.test(origin)) {
+    if (!origin || allowedOrigins.has(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
