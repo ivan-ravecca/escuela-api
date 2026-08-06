@@ -20,6 +20,7 @@ export const PROGRAM_OPTIONS: ProgramOptionItem[] = [
   { value: "prog-ac-economato", label: "PROG. ACADÉMICO ECONOMATO" },
   { value: "prog-ac-economato-2026", label: "PROG. ACADÉMICO ECONOMATO 2026" },
   { value: "prog-ac-chofer-sanitario", label: "PROG. ACADÉMICO CHOFER SANITARIO" },
+  { value: "prog-mc-ostomias", label: "PROG. Master Class OSTOMIAS" },
 ];
 
 // Extract valid program option values as a union type
@@ -41,4 +42,5 @@ export const PROGRAM_DRIVE_LINKS: Record<ProgramOption, string> = {
   "prog-ac-economato": "https://drive.google.com/file/d/175ADwjwj-z0UbVFpnHZXmdMeyE-uW89O/view?usp=drive_link",
   "prog-ac-economato-2026": "https://drive.google.com/file/d/16WWCShu9SvBnW9kmvAE9R3ShyVo_vuV9/view?usp=drive_link",
   "prog-ac-chofer-sanitario": "https://drive.google.com/file/d/1bWP9BhsOAyF24f5LbKSnCB6QEvNZCxKb/view?usp=drive_link",
+  "prog-mc-ostomias": "https://drive.google.com/file/d/1TtagCZ95WzHej3qqvq_zyspSmQPDFfxb/view?usp=drive_link",
 };

@@ -175,6 +175,12 @@ describe("diplomaRoutes", () => {
     expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/pdf");
     expect(mocks.fillPDFTemplate).toHaveBeenCalledTimes(1);
+    expect(mocks.fillPDFTemplate).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        courseType: "Aprobó el curso de",
+      }),
+    );
     expect(mocks.uploadOrReplaceFile).toHaveBeenCalledTimes(1);
   });
 
@@ -189,6 +195,31 @@ describe("diplomaRoutes", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toContain("application/pdf");
+    expect(mocks.fillPDFTemplate).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        courseType: "Aprobó el curso de",
+      }),
+    );
+  });
+
+  it("POST /diploma/certificate uses masterclass text for ostomias option", async () => {
+    const response = await request(app).post("/diploma/certificate").send({
+      studentName: "Ana",
+      courseName: "Curso",
+      courseDate: "2026-01-01",
+      certMec: true,
+      programOption: "prog-mc-ostomias",
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.headers["content-type"]).toContain("application/pdf");
+    expect(mocks.fillPDFTemplate).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        courseType: "Asistió a la masterclass de",
+      }),
+    );
   });
 
   it("POST /diploma/certificate returns 500 when hash cannot be created", async () => {
