@@ -161,11 +161,6 @@ router.post("/certificate", authMiddleware, async (req, res) => {
   // If no programOption, it's a course certificate; otherwise it's a program certificate
   const isCourseCert = !programOption;
 
-  const courseType =
-  programOption === "prog-mc-ostomias"
-    ? "Asistió a la masterclass de"
-    : "Aprobó el curso de";
-
   let qrImageBase64: string | undefined;
   let pdfBuffer: Buffer = null as any;
 
@@ -177,7 +172,6 @@ router.post("/certificate", authMiddleware, async (req, res) => {
           studentName,
           courseName,
           courseDate,
-          courseType,
         });
 
         await uploadOrReplaceFile(
@@ -192,7 +186,6 @@ router.post("/certificate", authMiddleware, async (req, res) => {
           studentName,
           courseName,
           courseDate,
-          courseType,
         });
 
         const initialUpload = await uploadOrReplaceFile(
@@ -226,7 +219,6 @@ router.post("/certificate", authMiddleware, async (req, res) => {
           studentName,
           courseName,
           courseDate,
-          courseType,
           qrImageBase64,
         });
 
@@ -244,7 +236,6 @@ router.post("/certificate", authMiddleware, async (req, res) => {
           studentName,
           courseName,
           courseDate,
-          courseType,
         });
 
         await uploadOrReplaceFile(
@@ -260,7 +251,6 @@ router.post("/certificate", authMiddleware, async (req, res) => {
           studentName,
           courseName,
           courseDate,
-          courseType,
         });
 
         const initialUpload = await uploadOrReplaceFile(
@@ -319,7 +309,6 @@ router.post("/certificate", authMiddleware, async (req, res) => {
           studentName,
           courseName,
           courseDate,
-          courseType,
           qrImageBase64,
         });
 

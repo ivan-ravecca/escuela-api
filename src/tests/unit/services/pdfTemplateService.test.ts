@@ -95,7 +95,6 @@ describe("pdfTemplateService", () => {
       studentName: "Juan Perez",
       courseName: "Curso X",
       courseDate: "2026-01-01",
-      courseType: "Aprobó el curso de",
       qrImageBase64: `data:image/png;base64,${Buffer.from("qr").toString("base64")}`,
     });
 
