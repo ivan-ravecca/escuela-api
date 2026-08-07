@@ -54,6 +54,7 @@ export interface CertificateData {
   studentName?: string;
   courseName?: string;
   courseDate?: string;
+  courseType?: string;
   qrImageBase64?: string;
 }
 
