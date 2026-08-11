@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "A simple Express server to send emails.",
   "main": "dist/app.js",
+  "engines": {
+    "node": "21.7.3"
+  },
   "scripts": {
     "start": "node dist/app.js",
     "build": "tsc",

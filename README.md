@@ -41,7 +41,7 @@ Complete conversational assistant system that helps prospective students find th
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js 21.7.3
 - npm or yarn
 - Database (MongoDB, PostgreSQL, etc.)
 
