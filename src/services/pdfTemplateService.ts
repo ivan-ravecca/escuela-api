@@ -52,6 +52,19 @@ async function fillPDFTemplate(
       courseDate.enableReadOnly();
     }
 
+    if (data.courseType) {
+      try {
+        const courseType = form.getTextField("courseType");
+        if (courseType) {
+          courseType.setText(data.courseType);
+          courseType.setAlignment(TextAlignment.Center);
+          courseType.enableReadOnly();
+        }
+      } catch {
+        // Keep backward compatibility when the template does not define courseType.
+      }
+    }
+
     if (data.qrImageBase64) {
       // Remove the data URL prefix if present
       const base64Data = data.qrImageBase64.replace(
