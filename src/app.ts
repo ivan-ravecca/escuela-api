@@ -14,7 +14,7 @@ import helmet from "helmet";
 import { errorHandler } from "./middleware/errorMiddleware";
 import { initializeDatabase } from "./database/connection";
 
-const corsOptions = {
+export const corsOptions = {
   origin: function (origin: any, callback: any) {
     const pattern = /^https?:\/\/(.*\.)?escuelaenfermeria\.com\.uy(\/.*)?$/;
     
@@ -42,37 +42,45 @@ const corsOptions = {
   ],
 };
 
-const app = express();
 const PORT = config.server.port;
 
-app.use(helmet()); // Seguridad
-app.use(morgan(config.server.nodeEnv === "development" ? "dev" : "combined"));
-app.use(cookieParser()); // Parse cookies for CSRF
-app.use(express.json());
+export const createApp = () => {
+  const app = express();
 
-app.use(express.urlencoded({ extended: true }));
-app.options("*", cors(corsOptions));
-app.use(cors(corsOptions));
-app.use(bodyParser.json());
+  app.use(helmet()); // Seguridad
+  app.use(morgan(config.server.nodeEnv === "development" ? "dev" : "combined"));
+  app.use(cookieParser()); // Parse cookies for CSRF
+  app.use(express.json());
 
+  app.use(express.urlencoded({ extended: true }));
+  app.options("*", cors(corsOptions));
+  app.use(cors(corsOptions));
+  app.use(bodyParser.json());
 
-app.use("/auth", authRoutes);
-app.use("/email", emailRoutes);
-app.use("/diploma", diplomaRoutes);
-app.use("/assistant", assistantRoutes);
-app.use("/courses", courseRoutes);
+  app.use("/auth", authRoutes);
+  app.use("/email", emailRoutes);
+  app.use("/diploma", diplomaRoutes);
+  app.use("/assistant", assistantRoutes);
+  app.use("/courses", courseRoutes);
 
-app.get("/", (req, res) => {
-  res.send("Hello World");
-});
-
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "success",
-    message: "API is running",
-    timestamp: new Date(),
+  app.get("/", (req, res) => {
+    res.send("Hello World");
   });
-});
+
+  app.get("/health", (req, res) => {
+    res.status(200).json({
+      status: "success",
+      message: "API is running",
+      timestamp: new Date(),
+    });
+  });
+
+  app.use(errorHandler);
+
+  return app;
+};
+
+export const app = createApp();
 
 // Initialize database and start server
 async function startServer() {
@@ -89,4 +97,8 @@ async function startServer() {
   }
 }
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
+
+export { startServer };

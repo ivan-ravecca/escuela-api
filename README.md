@@ -181,6 +181,13 @@ npm run dev
 - `npm start` - Run the production server
 - `npm run dev` - Run development server with auto-reload
 - `npm run build` - Compile TypeScript to JavaScript
+- `npm run typecheck` - Run TypeScript type checking without emitting files
+- `npm test` - Run all tests with Vitest
+- `npm run test:watch` - Run tests in watch mode
+- `npm run test:unit` - Run only unit tests
+- `npm run test:rest` - Run only REST endpoint tests
+- `npm run test:coverage` - Generate coverage report (text + HTML + lcov)
+- `npm run quality` - Run typecheck + coverage gate
 - `npm run seed` - Seed database with sample courses
 - `npm run seed:dev` - Seed database in development mode
 - `npm run mcp` - Run MCP server for course catalog
