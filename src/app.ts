@@ -9,6 +9,7 @@ import diplomaRoutes from "./routes/diploma";
 import authRoutes from "./routes/authRoutes";
 import assistantRoutes from "./routes/assistantRoutes";
 import courseRoutes from "./routes/courseRoutes";
+import siteCourseRoutes from "./routes/siteCourseRoutes";
 import config from "./config";
 import helmet from "helmet";
 import { errorHandler } from "./middleware/errorMiddleware";
@@ -32,7 +33,7 @@ const corsOptions = {
     }
   },
   credentials: true,
-  methods: ["GET", "POST", "OPTIONS"],
+  methods: ["GET", "POST", "PUT", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",
     "Authorization",
@@ -48,6 +49,7 @@ const PORT = config.server.port;
 app.use(helmet()); // Seguridad
 app.use(morgan(config.server.nodeEnv === "development" ? "dev" : "combined"));
 app.use(cookieParser()); // Parse cookies for CSRF
+app.use("/site-courses", express.json({ limit: "1mb" }));
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
@@ -61,6 +63,7 @@ app.use("/email", emailRoutes);
 app.use("/diploma", diplomaRoutes);
 app.use("/assistant", assistantRoutes);
 app.use("/courses", courseRoutes);
+app.use("/site-courses", siteCourseRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello World");

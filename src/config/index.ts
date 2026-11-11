@@ -42,6 +42,7 @@ const envSchema = z.object({
   DB_USER: z.string().default("escuelaapi"),
   DB_PASSWORD: z.string().default(""),
   DB_NAME: z.string().default("escuela"),
+  SHOP_IMAGES_DIR: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -96,6 +97,7 @@ const config = {
     password: env.DB_PASSWORD,
     name: env.DB_NAME,
   },
+  shopImagesDir: env.SHOP_IMAGES_DIR,
 };
 
 export default config;

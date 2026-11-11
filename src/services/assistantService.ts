@@ -1,7 +1,8 @@
 import Anthropic from "@anthropic-ai/sdk";
 import config from "../config";
-import { CourseRepository } from "../database/courseRepository";
-import { ChatMessage, Course } from "../types/course";
+import { getAssistantCatalog } from "./siteCatalogCache";
+import { toAssistantCourse } from "./assistantCourse";
+import { AssistantCourse, ChatMessage } from "../types/course";
 
 const SYSTEM_PROMPT = `Eres un asistente de orientación académica para un instituto/escuela de enfermería actualmente en escuelaenfermeria.com.uy
 
@@ -17,9 +18,10 @@ DATOS IMPORTANTES:
   - name
   - url del sitio
   - description
-  - duration_hours
-  - modality (presencial, virtual, semipresencial)
+  - duration_text y, si está disponible, duration_hours
+  - modality (presencial, virtual, semipresencial), si está disponible
   - requirements
+  - open_registration (si está disponible)
   - syllabus_summary
   - schedule (si estuvieran)
   - category (por ejemplo: inicial, avanzado, especializacion)
@@ -109,10 +111,11 @@ export class AssistantService {
   async chat(
     userMessage: string,
     conversationHistory: ChatMessage[] = []
-  ): Promise<{ response: string; recommendedCourses: Course[] }> {
+  ): Promise<{ response: string; recommendedCourses: AssistantCourse[] }> {
     try {
       // Get course catalog
-      const courses = await CourseRepository.getAllCourses();
+      const catalog = await getAssistantCatalog();
+      const courses: AssistantCourse[] = catalog.map((course) => toAssistantCourse(course, config.cors.siteUrl));
       const catalogContext = JSON.stringify(
         { course_catalog: courses },
         null,
@@ -166,9 +169,9 @@ export class AssistantService {
 
   private extractRecommendedCourses(
     response: string,
-    allCourses: Course[]
-  ): Course[] {
-    const recommended: Course[] = [];
+    allCourses: AssistantCourse[]
+  ): AssistantCourse[] {
+    const recommended: AssistantCourse[] = [];
 
     // Look for course names in the response
     for (const course of allCourses) {
