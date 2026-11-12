@@ -4,6 +4,7 @@ import { ChatInput, LeadCaptureInput } from "../schemas";
 import { Resend } from "resend";
 import config from "../config";
 import sanitizeHtml from "sanitize-html";
+import { CatalogUnavailableError } from "../services/siteCatalogCache";
 
 const assistantService = new AssistantService();
 const resend = new Resend(config.resend.apiKey);
@@ -31,10 +32,18 @@ export class AssistantController {
       res.status(200).json({
         response: result.response,
         recommended_courses: result.recommendedCourses,
+        catalog_stale: result.catalogStale,
       });
     } catch (error) {
       console.error("Error in chat controller:", error);
 
+      if (error instanceof CatalogUnavailableError) {
+        res.status(503).json({
+          error: "El catálogo de cursos no está disponible en este momento. Por favor, intentá nuevamente.",
+          code: "CATALOG_UNAVAILABLE",
+        });
+        return;
+      }
       // Handle AI overload error (529)
       if (error instanceof Error && error.message === "AI_OVERLOADED") {
         res.status(503).json({
@@ -125,7 +134,10 @@ Este lead fue generado cuando el usuario hizo click en "Me interesa" desde el as
         `,
       };
 
-      await resend.emails.send(emailContent);
+      const result = await resend.emails.send(emailContent);
+      if (result.error) {
+        throw new Error(`No se pudo enviar el interés: ${result.error.message}`);
+      }
 
       res.status(200).json({
         message: "¡Gracias por tu interés! Nos pondremos en contacto contigo pronto.",

@@ -1,0 +1,42 @@
+CREATE TABLE IF NOT EXISTS site_courses (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  migration_key VARCHAR(191) NULL UNIQUE,
+  title VARCHAR(255) NOT NULL,
+  term TEXT NOT NULL,
+  open_registration LONGTEXT NOT NULL,
+  info LONGTEXT NOT NULL,
+  curriculum LONGTEXT NULL,
+  requirements LONGTEXT NOT NULL,
+  images LONGTEXT NOT NULL,
+  most_wanted BOOLEAN NOT NULL DEFAULT FALSE,
+  short_course BOOLEAN NOT NULL DEFAULT FALSE,
+  master_class BOOLEAN NOT NULL DEFAULT FALSE,
+  sort_order INT NOT NULL DEFAULT 0,
+  menu_order INT NOT NULL DEFAULT 0,
+  published BOOLEAN NOT NULL DEFAULT TRUE,
+  duration_hours INT UNSIGNED NULL,
+  modality VARCHAR(32) NULL,
+  category VARCHAR(32) NULL,
+  syllabus_summary TEXT NULL,
+  schedule TEXT NULL,
+  job_opportunities TEXT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS site_course_slugs (
+  slug VARCHAR(191) NOT NULL PRIMARY KEY,
+  course_id INT UNSIGNED NOT NULL,
+  is_current BOOLEAN NOT NULL DEFAULT TRUE,
+  INDEX idx_site_course_slugs_course_id (course_id),
+  CONSTRAINT fk_site_course_slugs_course FOREIGN KEY (course_id)
+    REFERENCES site_courses(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS site_catalog_state (
+  id TINYINT UNSIGNED NOT NULL PRIMARY KEY,
+  revision BIGINT UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB;
+
+INSERT INTO site_catalog_state (id, revision) VALUES (1, 0)
+ON DUPLICATE KEY UPDATE id = id;

@@ -97,7 +97,10 @@ export const leadCaptureSchema = z.object({
   name: z.string().min(1, "Nombre es obligatorio").max(100, "Nombre es demasiado largo"),
   phone: z.string().min(1, "Teléfono es obligatorio").max(20, "Teléfono es demasiado largo"),
   email: z.string().email("Dirección de correo electrónico inválida").max(100).optional(),
-  course_id: z.number().int().positive("El ID del curso debe ser un número positivo"),
+  course_id: z.union([
+    z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(191),
+    z.number().int().positive(),
+  ]),
   course_name: z
     .string()
     .min(1, "Nombre del curso es obligatorio")

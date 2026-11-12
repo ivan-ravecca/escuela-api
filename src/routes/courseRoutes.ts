@@ -1,65 +1,84 @@
-import { Router, Request, Response } from "express";
-import { CourseRepository } from "../database/courseRepository";
+import { Router } from "express";
+import config from "../config";
+import { SiteCourseRepository } from "../database/siteCourseRepository";
+import { htmlToText } from "../services/htmlToText";
+import { SiteCourse } from "../types/siteCourse";
 
 const router = Router();
 
-// Get all courses
-router.get("/", async (req: Request, res: Response) => {
+function legacyCourse(course: SiteCourse) {
+  return {
+    id: course.recordId,
+    name: course.title,
+    url: new URL(course.path, config.cors.siteUrl).toString(),
+    description: htmlToText(course.info),
+    duration_hours: course.durationHours,
+    modality: course.modality,
+    requirements: course.requirements.join("\n"),
+    syllabus_summary: course.syllabusSummary,
+    schedule: course.schedule,
+    category: course.category,
+    job_opportunities: course.jobOpportunities,
+  };
+}
+
+router.get("/", async (_req, res, next) => {
   try {
-    const courses = await CourseRepository.getAllCourses();
-    res.status(200).json({ courses, total: courses.length });
+    const courses = (await SiteCourseRepository.list()).map(legacyCourse);
+    res.json({ courses, total: courses.length });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch courses" });
+    next(error);
   }
 });
 
-// Get course by ID
-router.get("/:id", async (req: Request, res: Response) => {
+router.get("/search/:query", async (req, res, next) => {
   try {
-    const id = parseInt(req.params.id);
-    const course = await CourseRepository.getCourseById(id);
+    const query = req.params.query.toLocaleLowerCase();
+    const courses = (await SiteCourseRepository.list()).map(legacyCourse).filter((course) =>
+      [course.name, course.description, course.syllabus_summary || ""]
+        .some((value) => value.toLocaleLowerCase().includes(query))
+    );
+    res.json({ courses, total: courses.length, query: req.params.query });
+  } catch (error) {
+    next(error);
+  }
+});
 
-    if (!course) {
+router.get("/category/:category", async (req, res, next) => {
+  try {
+    const courses = (await SiteCourseRepository.list()).map(legacyCourse)
+      .filter((course) => course.category === req.params.category);
+    res.json({ courses, total: courses.length, category: req.params.category });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/modality/:modality", async (req, res, next) => {
+  try {
+    const courses = (await SiteCourseRepository.list()).map(legacyCourse)
+      .filter((course) => course.modality === req.params.modality);
+    res.json({ courses, total: courses.length, modality: req.params.modality });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/:id", async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isSafeInteger(id) || id < 1) {
+      res.status(400).json({ error: "Invalid course ID" });
+      return;
+    }
+    const course = await SiteCourseRepository.getByRecordId(id);
+    if (!course || !course.published) {
       res.status(404).json({ error: "Course not found" });
       return;
     }
-
-    res.status(200).json(course);
+    res.json(legacyCourse(course));
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch course" });
-  }
-});
-
-// Search courses
-router.get("/search/:query", async (req: Request, res: Response) => {
-  try {
-    const { query } = req.params;
-    const courses = await CourseRepository.searchCourses(query);
-    res.status(200).json({ courses, total: courses.length, query });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to search courses" });
-  }
-});
-
-// Filter by category
-router.get("/category/:category", async (req: Request, res: Response) => {
-  try {
-    const { category } = req.params;
-    const courses = await CourseRepository.getCoursesByCategory(category);
-    res.status(200).json({ courses, total: courses.length, category });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to filter courses" });
-  }
-});
-
-// Filter by modality
-router.get("/modality/:modality", async (req: Request, res: Response) => {
-  try {
-    const { modality } = req.params;
-    const courses = await CourseRepository.getCoursesByModality(modality);
-    res.status(200).json({ courses, total: courses.length, modality });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to filter courses" });
+    next(error);
   }
 });
 

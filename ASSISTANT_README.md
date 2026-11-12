@@ -1,213 +1,76 @@
-# Escuela API - AI Assistant
+# Asistente de orientación académica
 
-This README documents the functionality of the AI assistant for academic guidance.
+El asistente utiliza Anthropic para responder consultas y recomendar hasta tres
+cursos publicados. El catálogo proviene de MariaDB (`site_courses` y
+`site_course_slugs`), no de SQLite ni de un servidor MCP. El frontend permite
+enviar una solicitud de contacto por curso mediante Resend.
 
-## 🤖 Academic Guidance Assistant
+El mensaje inicial hace una pregunta breve. Las respuestas posteriores buscan
+recomendar opciones en cuanto el interés sea claro y se limitan a dos preguntas
+de seguimiento; los requisitos no confirmados se indican sin darlos por cumplidos.
+La API revisa los signos de interrogación de la respuesta y reintenta una vez si
+el modelo excede el límite. Las preguntas formuladas sin signos dependen del
+cumplimiento de las instrucciones por parte del modelo.
 
-AI assistant system that helps prospective students find the most suitable nursing course or career based on their profile.
+## Configuración y despliegue
 
-### Technologies
+1. Aplicar las migraciones del catálogo según [migrations/README.md](./migrations/README.md)
+   y comprobar que la API puede conectarse a MariaDB.
+2. Configurar `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL`, `ANTHROPIC_MAX_TOKENS`,
+   `SITE_URL`, `RESEND_API_KEY`, `EMAIL_TO`, `EMAIL_FROM` y `CSRF_SECRET` en
+   el entorno seguro de la API. No guardar claves reales en el repositorio.
+   `SITE_URL` debe apuntar al dominio público del sitio.
+3. Verificar que CORS permite el origen del frontend con credenciales, que el
+   navegador acepta la cookie CSRF y que el proxy conserva correctamente el
+   origen y protocolo HTTPS. En producción, el CORS actual permite los
+   dominios de escuelaenfermeria.com.uy; no asume que `SITE_URL` cambie esa
+   lista.
+4. Desplegar la API y, cuando esté lista, construir y desplegar el frontend con
+   `VITE_ENABLE_AI=true`. La variable de Vite se incorpora en la compilación;
+   el widget permanece oculto con cualquier otro valor. La API puede arrancar
+   sin la clave de Anthropic, pero no puede responder mensajes hasta configurarla
+   y reiniciar el proceso.
 
-- **Claude 3.5 Haiku** - Anthropic AI model (fast and economical)
-- **MCP (Model Context Protocol)** - For course catalog management
-- **SQLite** - Course database
-- **Express Rate Limiting** - Protection against abuse
-- **Resend** - Email sending for lead capture
+Las conversaciones y el catálogo se envían a Anthropic para generar respuestas;
+los datos del formulario se envían a Resend para notificar al equipo.
 
-## 🚀 Setup
+## Catálogo y caché
 
-### 1. Environment Variables
+Cada proceso de la API mantiene una copia en memoria de los cursos publicados.
+En cada mensaje consulta `site_catalog_state.revision`; solo vuelve a leer el
+catálogo completo si la revisión cambia o la copia cumple 24 horas. Las
+solicitudes concurrentes comparten la recarga. El ABM incrementa la revisión
+en la misma transacción de cada cambio, por lo que las instancias detectan los
+cambios en sus siguientes consultas. Una modificación directa de base debe
+incrementar esa revisión.
 
-Add these variables to your `.env` file:
+Si la lectura de la revisión o la recarga falla, se registra el error y se
+utiliza la última copia correcta durante un máximo de 24 horas desde su carga.
+La respuesta incluye `catalog_stale: true` para mostrar el aviso al usuario.
+Puede contener cursos que se despublicaron posteriormente. Sin copia válida,
+incluido un reinicio con la base fuera de servicio, el endpoint devuelve 503
+con `code: "CATALOG_UNAVAILABLE"` y no consulta a Anthropic. La caché no se
+comparte entre procesos ni sobrevive a reinicios.
 
-```bash
-# Anthropic API
-ANTHROPIC_API_KEY=your_api_key_here
-ANTHROPIC_MODEL=claude-3-5-haiku-20241022
-ANTHROPIC_MAX_TOKENS=2048
+## Endpoints
 
-# Existing
-RESEND_API_KEY=your_resend_key
-EMAIL_TO=recipient@escuelaenfermeria.com.uy
-EMAIL_FROM=noreply@escuelaenfermeria.com.uy
-```
+- `GET /assistant/welcome`: mensaje de bienvenida.
+- `GET /assistant/csrf-token`: obtiene el token y la cookie de protección.
+- `POST /assistant/chat`: recibe `message` y `conversation_history`; devuelve
+  `response`, `recommended_courses` y `catalog_stale`. Límite: 10 solicitudes
+  por minuto por IP.
+- `POST /assistant/interest`: recibe `name`, `phone`, `email`, `course_id` y
+  `course_name` y envía el contacto por correo. Límite: 3 solicitudes por hora
+  por IP.
 
-### 2. Initialize Database
+Las solicitudes POST requieren la cookie CSRF y el encabezado `X-CSRF-Token`.
+El frontend envía credenciales y renueva el token al recibir una respuesta
+403. La validación y los límites aplican también cuando el widget está oculto.
 
-First, build the project and then run the seeder:
+## Pruebas
 
-```bash
-npm run build
-npm run seed
-```
-
-Or in development:
-
-```bash
-npm run seed:dev
-```
-
-### 3. Scripts in package.json
-
-Add these scripts to your `package.json`:
-
-```json
-{
-  "scripts": {
-    "seed": "node dist/scripts/seedCourses.js",
-    "seed:dev": "ts-node src/scripts/seedCourses.ts",
-    "mcp": "node dist/mcp/courseCatalogServer.js"
-  }
-}
-```
-
-## 📡 API Endpoints
-
-### GET /assistant/welcome
-
-Gets the initial welcome message.
-
-**Response:**
-```json
-{
-  "message": "¡Hola! 👋 Soy tu asistente virtual..."
-}
-```
-
-### POST /assistant/chat
-
-Sends a message to the assistant and receives recommendations.
-
-**Rate Limit:** 10 requests/minute per IP
-
-**Request:**
-```json
-{
-  "message": "Hola, quiero estudiar enfermería",
-  "conversation_history": [
-    {
-      "role": "user",
-      "content": "mensaje anterior"
-    },
-    {
-      "role": "assistant",
-      "content": "respuesta anterior"
-    }
-  ]
-}
-```
-
-**Response:**
-```json
-{
-  "response": "¡Genial que quieras estudiar enfermería! Para poder recomendarte...",
-  "recommended_courses": [
-    {
-      "id": 1,
-      "name": "Auxiliar de Enfermería",
-      "url": "https://...",
-      "description": "...",
-      "duration_hours": 400,
-      "modality": "presencial",
-      "category": "inicial"
-    }
-  ]
-}
-```
-
-### POST /assistant/interest
-
-Captures a student's interest (sends email).
-
-
-**Rate Limit:** 3 requests/hour per IP
-
-**Request:**
-```json
-{
-  "name": "Juan Pérez",
-  "phone": "+598 99 123 456",
-  "email": "john@example.com",
-  "interested_courses": ["Nursing Assistant", "First Aid"]
-}
-```
-
-**Response:**
-```json
-{
-  "message": "Gracias por tu interés. Nos pondremos en contacto pronto.",
-  "success": true
-}
-```
-
-## 🗄️ Database
-
-### Course Structure
-
-```sql
-CREATE TABLE courses (
-  id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL,
-  url TEXT NOT NULL,
-  description TEXT NOT NULL,
-  duration_hours INTEGER NOT NULL,
-  modality TEXT CHECK(modality IN ('presencial', 'virtual', 'semipresencial')),
-  requirements TEXT NOT NULL,
-  syllabus_summary TEXT NOT NULL,
-  schedule TEXT,
-  category TEXT CHECK(category IN ('inicial', 'avanzado', 'especializacion')),
-  job_opportunities TEXT NOT NULL,
-  created_at DATETIME,
-  updated_at DATETIME
-);
-```
-
-### CRUD Operations
-
-```typescript
-import { CourseRepository } from "./database/courseRepository";
-
-// Get all courses
-const courses = CourseRepository.getAllCourses();
-
-// Search by category
-const initialCourses = CourseRepository.getCoursesByCategory("inicial");
-
-// Search by modality
-const onlineCourses = CourseRepository.getCoursesByModality("virtual");
-
-// Search by text
-const searchResults = CourseRepository.searchCourses("pediatría");
-
-// Create course
-const newCourse = CourseRepository.createCourse({
-  name: "New Course",
-  url: "https://...",
-  // ... other fields
-});
-```
-
-## 🎯 Conversation Flow
-
-1. User opens the chat widget
-2. Receives welcome message (`/assistant/welcome`)
-3. Starts conversation by sending messages (`/assistant/chat`)
-4. Assistant asks questions to understand their profile
-5. Once enough information is gathered, recommends 1-3 courses
-6. Asks if they want to be contacted
-7. User sends their data (`/assistant/interest`)
-8. System sends email to the sales team
-
-## 🛡️ Security
-
-- **Rate Limiting**: Prevents API abuse
-- **CORS**: Already configured in your app.ts
-- **Validation**: All endpoints validate inputs
-- **Sanitization**: Messages are processed securely
-
-## 📚 Additional Documentation
-
-- [README.md](./README.md) - Main project documentation
-- [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture and diagrams
-- [DOCKER_DATABASE.md](./DOCKER_DATABASE.md) - MariaDB setup with Docker
-
+`npm run test:catalog` ejecuta pruebas de caché y del asistente con el proveedor
+simulado, seguidas de integración con MariaDB y API aisladas. Requiere Docker,
+la imagen local `mariadb:11.2` y los puertos de prueba disponibles; no llama a
+Anthropic ni utiliza la base real. La prueba del widget se documenta en el
+repositorio del frontend.

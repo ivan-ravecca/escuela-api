@@ -43,7 +43,7 @@ Complete conversational assistant system that helps prospective students find th
 
 - Node.js 21.7.3
 - npm or yarn
-- Database (MongoDB, PostgreSQL, etc.)
+- MariaDB (see [catalog migrations](migrations/README.md))
 
 ### Installation
 
@@ -67,14 +67,20 @@ Complete conversational assistant system that helps prospective students find th
    npm start
    ```
 
+### Tests
+
+`npm test` runs assistant cache tests with a simulated provider and the catalog
+integration test using a temporary MariaDB container and test API. It requires Docker running, the `mariadb:11.2` image locally, and
+ports 33317 and 31317 available. `npm run test:positions` runs the position
+repository and HTTP tests against a separately prepared isolated database and API.
+See [Pruebas aisladas](migrations/README.md#pruebas-aisladas) for details.
+
 ## Project Structure
 
 ```
 escuela-api
 ├── keys/
 │   └── service-account-key.json      # Service account credentials
-├── data/
-│   └── courses.db                    # SQLite database (NEW)
 ├── src/
 │   ├── app.ts                        # Application entry point
 │   ├── config/
@@ -83,7 +89,8 @@ escuela-api
 │   │   ├── authController.ts         # Authentication controller
 │   │   └── assistantController.ts    # AI Assistant controller (NEW)
 │   ├── database/
-│   │   └── courseRepository.ts       # Course CRUD operations (NEW)
+│   │   ├── courseRepository.ts       # Legacy course CRUD operations
+│   │   └── siteCourseRepository.ts   # Published site catalog
 │   ├── middleware/
 │   │   ├── authMiddleware.ts         # JWT authentication middleware
 │   │   └── errorMiddleware.ts        # Error middleware
@@ -167,8 +174,8 @@ cp .env.example .env
 # 3. Build the project
 npm run build
 
-# 4. Initialize database with sample courses
-npm run seed
+# 4. Apply the catalog migrations and initial data
+# See migrations/README.md before running any SQL.
 
 # 5. Start the server
 npm start
@@ -181,8 +188,7 @@ npm run dev
 - `npm start` - Run the production server
 - `npm run dev` - Run development server with auto-reload
 - `npm run build` - Compile TypeScript to JavaScript
-- `npm run seed` - Seed database with sample courses
-- `npm run seed:dev` - Seed database in development mode
+- `npm run seed` / `npm run seed:dev` - Legacy seed for the old `courses` table; not used by the site or assistant
 - `npm run mcp` - Run MCP server for course catalog
 
 ### Testing the AI Assistant
@@ -262,14 +268,26 @@ curl -X POST https://api.escuelaenfermeria.com.uy/assistant/interest \
 
 📚 **API de gestión de catálogo de cursos**
 
+El catálogo canónico se carga desde la base mediante `/site-courses`; las
+operaciones de administración requieren JWT del dominio autorizado:
+
+- `GET /site-courses` - cursos publicados
+- `GET /site-courses/:slug` - curso publicado y resolución de alias históricos
+- `GET /site-courses/admin` - todos los cursos, incluidos los despublicados
+- `POST /site-courses` - crear un curso
+- `PUT /site-courses/:id` - editar, despublicar o restaurar por ID interno
+- `POST /site-courses/images` - subir una imagen JPEG, PNG o WebP (máximo 8 MB)
+
+Las URLs `/courses` existentes son adaptadores de lectura del mismo catálogo;
+los campos opcionales sin datos pueden ser `null` y sus IDs numéricos son los
+IDs internos del catálogo nuevo. El asistente usa el slug público. Ver
+[migración y despliegue](./migrations/README.md) antes de actualizar la base.
+
 - `GET /courses` - Listar todos los cursos
 - `GET /courses/:id` - Obtener curso por ID
 - `GET /courses/search/:query` - Buscar cursos por keyword
 - `GET /courses/category/:category` - Filtrar por categoría (inicial/avanzado/especializacion)
 - `GET /courses/modality/:modality` - Filtrar por modalidad (presencial/virtual/semipresencial)
-- `POST /courses` - Crear nuevo curso (⚠️ proteger con auth en producción)
-- `PUT /courses/:id` - Actualizar curso (⚠️ proteger con auth en producción)
-- `DELETE /courses/:id` - Eliminar curso (⚠️ proteger con auth en producción)
 
 **Ejemplo de respuesta:**
 ```json
@@ -280,14 +298,14 @@ curl -X POST https://api.escuelaenfermeria.com.uy/assistant/interest \
       "name": "Auxiliar de Enfermería",
       "url": "https://escuelaenfermeria.com.uy/cursos/auxiliar-enfermeria",
       "description": "Formación básica en enfermería...",
-      "duration_hours": 400,
-      "modality": "presencial",
-      "category": "inicial",
-      "requirements": "Primaria completa, edad mínima 18 años",
-      "job_opportunities": "Hospitales públicos y privados..."
+      "duration_hours": null,
+      "modality": null,
+      "category": null,
+      "requirements": "Requisitos publicados",
+      "job_opportunities": null
     }
   ],
-  "total": 7
+  "total": 18
 }
 ```
 
@@ -401,7 +419,7 @@ fetch(
   ```bash
   npm install
   npm run build
-  npm run seed
+  # Aplicar las migraciones siguiendo migrations/README.md
   ```
 
 3. **Start production server:**

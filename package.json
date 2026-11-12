@@ -11,6 +11,9 @@
     "build": "tsc",
     "dev": "ts-node-dev src/app.ts",
     "postinstall": "npm run build",
+    "test": "npm run test:catalog",
+    "test:catalog": "npm run build && node --test tests/siteCatalogCache.test.cjs tests/assistant.test.cjs && node tests/runCatalogTests.cjs",
+    "test:positions": "npm run build && node --test tests/siteCoursePositions.integration.cjs && node --test tests/siteCoursePositions.http.cjs",
     "seed": "node dist/scripts/seedCourses.js",
     "seed:dev": "ts-node src/scripts/seedCourses.ts"
   },
@@ -27,6 +30,7 @@
     "google-auth-library": "^10.9.1",
     "googleapis": "^173.0.0",
     "helmet": "^8.1.0",
+    "image-size": "2.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
     "mysql2": "^3.15.3",
@@ -47,7 +51,7 @@
     "@types/node": "^22.19.2",
     "@types/qrcode": "^1.5.5",
     "@types/sanitize-html": "^2.16.0",
-    "eslint": "^10.8.0",
+    "eslint": "^9.39.1",
     "prettier": "^3.5.1",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
@@ -55,10 +59,10 @@
     "winston": "^3.17.0"
   },
   "overrides": {
-    "brace-expansion": "^5.0.8",
+    "brace-expansion": "^2.0.2",
     "glob": "^10.5.0",
     "gaxios": "^7.3.0",
-    "minimatch": "^10.2.6",
+    "minimatch": "^9.0.5",
     "rimraf": "^5.0.10",
     "uuid": "^11.1.1"
   },

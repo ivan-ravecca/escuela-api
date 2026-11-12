@@ -27,6 +27,22 @@ export interface CourseInput {
   job_opportunities: string;
 }
 
+export interface AssistantCourse {
+  id: string;
+  name: string;
+  url: string;
+  description: string;
+  duration_text: string;
+  duration_hours?: number;
+  modality?: Course["modality"];
+  requirements: string[];
+  open_registration?: string;
+  syllabus_summary?: string;
+  schedule?: string;
+  category?: Course["category"];
+  job_opportunities?: string;
+}
+
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -39,13 +55,13 @@ export interface ChatRequest {
 
 export interface ChatResponse {
   response: string;
-  recommended_courses?: Course[];
+  recommended_courses?: AssistantCourse[];
 }
 
 export interface LeadCaptureRequest {
   name: string;
   phone: string;
   email?: string;
-  course_id: number;
+  course_id: string | number;
   course_name: string;
 }
