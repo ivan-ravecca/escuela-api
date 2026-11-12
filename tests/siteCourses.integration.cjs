@@ -70,7 +70,7 @@ test("catalog CRUD, HTML security, aliases, publication, upload and cache", asyn
   assert.equal((await request("/site-courses/admin")).status, 401);
   assert.equal((await request("/site-courses", json("POST", input, false))).status, 401);
 
-  const before = await getAssistantCatalog();
+  const before = (await getAssistantCatalog()).courses;
   const assistantCourse = toAssistantCourse(before[0], "https://example.test");
   assert.equal(assistantCourse.id, before[0].id);
   assert.equal(assistantCourse.url, `https://example.test${before[0].path}`);
@@ -85,7 +85,7 @@ test("catalog CRUD, HTML security, aliases, publication, upload and cache", asyn
   createdId = created.body.recordId;
   assert.doesNotMatch(created.body.openRegistration, /script|alert/);
   assert.doesNotMatch(created.body.info, /img|onerror/);
-  assert.equal((await getAssistantCatalog()).length, before.length + 1);
+  assert.equal((await getAssistantCatalog()).courses.length, before.length + 1);
   assert.equal((await request("/site-courses", json("POST", input))).status, 409);
 
   const edited = { ...input, id: "zz-integration-test-renamed" };
@@ -95,16 +95,16 @@ test("catalog CRUD, HTML security, aliases, publication, upload and cache", asyn
   assert.equal(oldUrl.status, 200);
   assert.equal(oldUrl.body.canonical, false);
   assert.equal(oldUrl.body.course.path, `/cursos/${edited.id}`);
-  assert.ok((await getAssistantCatalog()).some((course) => course.id === edited.id));
+  assert.ok((await getAssistantCatalog()).courses.some((course) => course.id === edited.id));
   assert.equal((await request("/site-courses", json("POST", input))).status, 409);
 
   const hidden = await request(`/site-courses/${created.body.recordId}`, json("PUT", { ...edited, published: false }));
   assert.equal(hidden.status, 200);
   assert.equal((await request(`/site-courses/${edited.id}`)).status, 404);
-  assert.ok(!(await getAssistantCatalog()).some((course) => course.id === edited.id));
+  assert.ok(!(await getAssistantCatalog()).courses.some((course) => course.id === edited.id));
   assert.equal((await request(`/courses/${created.body.recordId}`)).status, 404);
   assert.equal((await request(`/site-courses/${created.body.recordId}`, json("PUT", edited))).status, 200);
-  assert.ok((await getAssistantCatalog()).some((course) => course.id === edited.id));
+  assert.ok((await getAssistantCatalog()).courses.some((course) => course.id === edited.id));
 
   const invalidImage = await request("/site-courses/images", {
     method: "POST", headers: { ...authorization, "Content-Type": "image/png" }, body: "not an image",

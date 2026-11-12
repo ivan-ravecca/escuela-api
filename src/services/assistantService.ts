@@ -1,6 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import config from "../config";
-import { getAssistantCatalog } from "./siteCatalogCache";
+import { CatalogUnavailableError, getAssistantCatalog } from "./siteCatalogCache";
 import { toAssistantCourse } from "./assistantCourse";
 import { AssistantCourse, ChatMessage } from "../types/course";
 
@@ -33,25 +33,21 @@ REGLAS CLAVE:
    - Solo puedes recomendar cursos que existan en el JSON "course_catalog".
    - Si el usuario pide algo que no existe en el catálogo, proponé lo más parecido posible y avisá que es una alternativa.
 
-2. Haceme SIEMPRE preguntas antes de recomendar:
-   - ¿Qué edad tenés?
-   - ¿Hasta qué año de secundaria y afines cursaste?
-   - ¿Tenés alguna experiencia previa en salud o enfermería?
-   - ¿Cuántas horas por semana podrías dedicar al estudio?
-   - ¿Preferís cursar de forma presencial, virtual o te da lo mismo?
-   - ¿Buscás algo introductorio, o ya trabajás en el área y querés especializarte?
-   - ¿Cuál es tu objetivo principal? (conseguir trabajo, mejorar en el actual, cambiar de área, etc.)
-
-   Podés adaptar las preguntas según lo que el usuario ya haya dicho, pero al menos intenta cubrir:
-   - experiencia
-   - disponibilidad horaria
-   - preferencia de modalidad
-   - objetivo
+2. Conversación breve:
+   - El mensaje de bienvenida ya hizo la pregunta inicial. En cada respuesta posterior
+     hacé como máximo 2 preguntas, contando también las preguntas combinadas.
+   - Respondé la consulta y recomendá cursos en cuanto haya información suficiente;
+     si el usuario ya expresó su interés, ofrecé opciones sin exigir más respuestas.
+   - Si es imprescindible aclarar algo para orientar, preguntá solo lo necesario.
+     No pidas nuevamente datos que el usuario ya proporcionó.
+   - No solicites por rutina edad, estudios, experiencia, horarios y modalidad.
+     Podés sugerir una opción e indicar que confirme los requisitos que no conozcas.
 
 3. Uso del catálogo (JSON):
-   - Una vez que tengas suficiente información del usuario, analizá el objeto "course_catalog".
+   - Analizá el objeto "course_catalog" y respondé con opciones lo antes posible.
    - Filtra primero por:
-     - requisitos (no recomiendes cursos para los que no cumple requisitos).
+     - requisitos (no recomiendes cursos para los que sabés que no cumple requisitos;
+       si no sabés si los cumple, indicá los requisitos sin darlo por hecho).
      - modalidad preferida (si indicó una).
      - nivel / categoría aproximada (inicial, avanzado, especialización).
    - Luego priorizá:
@@ -80,7 +76,8 @@ REGLAS CLAVE:
    - NO uses formato markdown: sin asteriscos (*), sin doble asterisco (**), sin guiones bajos (_), sin almohadillas (#). Usá texto plano únicamente.
 
 6. Si falta información:
-   - Si el usuario te pide una recomendación muy rápido (por ejemplo: "decime qué curso hago"), pedile amablemente que te responda 2 o 3 preguntas clave antes de recomendar.
+   - Si el interés no está claro, hacé una pregunta breve; si ya está claro,
+     proponé opciones sin demorar la respuesta para completar un cuestionario.
    - No inventes datos que no estén ni en el input del usuario ni en el JSON.
 
 7. Lenguaje:
@@ -92,30 +89,16 @@ Recordatorio final:
 - Siempre explica el POR QUÉ de cada recomendación, no solo el nombre del curso.`;
 
 export class AssistantService {
-  private client: Anthropic;
-
-  constructor() {
-    if (!config.anthropic.apiKey) {
-      throw new Error(
-        "ANTHROPIC_API_KEY is not configured. Please add it to your .env file."
-      );
-    }
-
-    this.client = new Anthropic({
-      apiKey: config.anthropic.apiKey,
-    });
-
-    console.log("✅ Assistant Service initialized with Anthropic API");
-  }
+  private client: Anthropic | undefined;
 
   async chat(
     userMessage: string,
     conversationHistory: ChatMessage[] = []
-  ): Promise<{ response: string; recommendedCourses: AssistantCourse[] }> {
+  ): Promise<{ response: string; recommendedCourses: AssistantCourse[]; catalogStale: boolean }> {
     try {
       // Get course catalog
       const catalog = await getAssistantCatalog();
-      const courses: AssistantCourse[] = catalog.map((course) => toAssistantCourse(course, config.cors.siteUrl));
+      const courses: AssistantCourse[] = catalog.courses.map((course) => toAssistantCourse(course, config.cors.siteUrl));
       const catalogContext = JSON.stringify(
         { course_catalog: courses },
         null,
@@ -123,8 +106,9 @@ export class AssistantService {
       );
 
       // Build conversation messages
+      const firstUser = conversationHistory.findIndex((msg) => msg.role === "user");
       const messages: Anthropic.MessageParam[] = [
-        ...conversationHistory.map((msg) => ({
+        ...(firstUser < 0 ? [] : conversationHistory.slice(firstUser)).map((msg) => ({
           role: msg.role as "user" | "assistant",
           content: msg.content,
         })),
@@ -135,15 +119,30 @@ export class AssistantService {
       ];
 
       // Call Claude API
-      const response = await this.client.messages.create({
-        model: config.anthropic.model,
-        max_tokens: config.anthropic.maxTokens,
-        system: SYSTEM_PROMPT,
-        messages,
-      });
-
-      const assistantResponse =
-        response.content[0].type === "text" ? response.content[0].text : "";
+      if (!this.client) {
+        if (!config.anthropic.apiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
+        this.client = new Anthropic({ apiKey: config.anthropic.apiKey });
+      }
+      let assistantResponse = "";
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const response = await this.client.messages.create({
+          model: config.anthropic.model,
+          max_tokens: config.anthropic.maxTokens,
+          system: attempt === 0 ? SYSTEM_PROMPT : `${SYSTEM_PROMPT}\n\nIMPORTANTE: Tu respuesta anterior excedió el límite. Respondé con un máximo de 2 preguntas y priorizá recomendaciones concretas.`,
+          messages,
+        });
+        assistantResponse = response.content
+          .filter((block) => block.type === "text")
+          .map((block) => block.text)
+          .join("\n").trim();
+        if (!assistantResponse) throw new Error("AI provider returned an empty response");
+        const text = assistantResponse.replace(/https?:\/\/\S+/gi, "");
+        const opening = (text.match(/¿/g) || []).length;
+        const closing = (text.match(/\?/g) || []).length;
+        if (Math.max(opening, closing) <= 2) break;
+        if (attempt === 1) throw new Error("AI provider exceeded the question limit");
+        console.warn("El asistente excedió el límite de preguntas; se intentará nuevamente.");
+      }
 
       // Extract recommended course IDs from the response (simple heuristic)
       const recommendedCourses = this.extractRecommendedCourses(
@@ -154,8 +153,10 @@ export class AssistantService {
       return {
         response: assistantResponse,
         recommendedCourses,
+        catalogStale: catalog.stale,
       };
     } catch (error: any) {
+      if (error instanceof CatalogUnavailableError) throw error;
       console.error("Error calling Claude API:", error);
       
       // Check if it's an Anthropic API error with status code 529 (overloaded)
@@ -184,16 +185,9 @@ export class AssistantService {
   }
 
   async generateWelcomeMessage(): Promise<string> {
-    return `Hola! 👋 Soy tu asistente virtual de orientación académica de la Escuela de Enfermería.
+    return `¡Hola! 👋 Soy el asistente de la Escuela de Enfermería.
 
-Estoy acá para ayudarte a encontrar el curso o carrera que mejor se adapte a vos y a tus objetivos. 
-
-Para poder recomendarte las mejores opciones, me gustaría conocerte un poco mejor. ¿Me contás un poco sobre vos? Por ejemplo:
-- ¿Qué experiencia tenés en el área de salud o enfermería?
-- ¿Cuántas horas por semana podrías dedicar a estudiar?
-- ¿Preferís algo presencial, virtual, o te da lo mismo?
-
-Respondeme todo junto y vamos viendo juntos qué te conviene! 😊`;
+¿Qué te gustaría estudiar y qué experiencia tenés en el área? Con eso puedo sugerirte cursos o carreras disponibles.`;
   }
 }
 

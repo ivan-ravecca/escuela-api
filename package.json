@@ -12,7 +12,7 @@
     "dev": "ts-node-dev src/app.ts",
     "postinstall": "npm run build",
     "test": "npm run test:catalog",
-    "test:catalog": "npm run build && node tests/runCatalogTests.cjs",
+    "test:catalog": "npm run build && node --test tests/siteCatalogCache.test.cjs tests/assistant.test.cjs && node tests/runCatalogTests.cjs",
     "test:positions": "npm run build && node --test tests/siteCoursePositions.integration.cjs && node --test tests/siteCoursePositions.http.cjs",
     "seed": "node dist/scripts/seedCourses.js",
     "seed:dev": "ts-node src/scripts/seedCourses.ts"

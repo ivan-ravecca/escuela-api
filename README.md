@@ -43,7 +43,7 @@ Complete conversational assistant system that helps prospective students find th
 
 - Node.js 21.7.3
 - npm or yarn
-- Database (MongoDB, PostgreSQL, etc.)
+- MariaDB (see [catalog migrations](migrations/README.md))
 
 ### Installation
 
@@ -69,8 +69,8 @@ Complete conversational assistant system that helps prospective students find th
 
 ### Tests
 
-`npm test` runs the catalog integration test using a temporary MariaDB container
-and test API. It requires Docker running, the `mariadb:11.2` image locally, and
+`npm test` runs assistant cache tests with a simulated provider and the catalog
+integration test using a temporary MariaDB container and test API. It requires Docker running, the `mariadb:11.2` image locally, and
 ports 33317 and 31317 available. `npm run test:positions` runs the position
 repository and HTTP tests against a separately prepared isolated database and API.
 See [Pruebas aisladas](migrations/README.md#pruebas-aisladas) for details.
@@ -81,8 +81,6 @@ See [Pruebas aisladas](migrations/README.md#pruebas-aisladas) for details.
 escuela-api
 ├── keys/
 │   └── service-account-key.json      # Service account credentials
-├── data/
-│   └── courses.db                    # SQLite database (NEW)
 ├── src/
 │   ├── app.ts                        # Application entry point
 │   ├── config/
@@ -91,7 +89,8 @@ escuela-api
 │   │   ├── authController.ts         # Authentication controller
 │   │   └── assistantController.ts    # AI Assistant controller (NEW)
 │   ├── database/
-│   │   └── courseRepository.ts       # Course CRUD operations (NEW)
+│   │   ├── courseRepository.ts       # Legacy course CRUD operations
+│   │   └── siteCourseRepository.ts   # Published site catalog
 │   ├── middleware/
 │   │   ├── authMiddleware.ts         # JWT authentication middleware
 │   │   └── errorMiddleware.ts        # Error middleware
